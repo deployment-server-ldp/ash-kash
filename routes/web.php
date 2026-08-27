@@ -7,6 +7,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\DeploySetupController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
@@ -15,12 +16,31 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Middleware\DetectCurrency;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+
+// One-time no-terminal production setup for hosts without SSH (see DeploySetupController).
+// Runs before any migrations exist, so it must not depend on the `sessions` table.
+Route::get('/deploy-setup/{token}', [DeploySetupController::class, 'run'])
+    ->name('deploy.setup')
+    ->withoutMiddleware([
+        StartSession::class,
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        ShareErrorsFromSession::class,
+        VerifyCsrfToken::class,
+        DetectCurrency::class,
+    ]);
 
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/category/{category:slug}', [ShopController::class, 'category'])->name('shop.category');

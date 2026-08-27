@@ -227,12 +227,50 @@ fully built out, so nothing here is faked — it's just not maximally deep yet:
 
 ## Production deployment
 
-- Works on any standard PHP hosting target (Vercel is Node-oriented and not
-  applicable to Laravel; use a VPS, Laravel Forge, Ploi, or a container
-  platform).
-- Run `composer install --optimize-autoloader --no-dev`, `npm run build`,
-  `php artisan migrate --force`, `php artisan config:cache`,
-  `php artisan route:cache`, `php artisan view:cache`.
+Works on any standard PHP hosting target (Vercel is Node-oriented and not
+applicable to Laravel) — a VPS, Laravel Forge/Ploi, a container platform,
+or ordinary shared hosting like Hostinger.
+
+### Option A — you have SSH/terminal access (VPS, Forge, Ploi, most Cloud hosting)
+
+```bash
+git clone <your-repo-url>
+cd ash-kash
+composer install --optimize-autoloader --no-dev
+npm install && npm run build
+cp .env.example .env   # fill in DB_*, APP_URL, etc.
+php artisan key:generate
+php artisan migrate --force
+php artisan storage:link
+php artisan db:seed --force   # optional — skip for a totally empty store
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+```
+
+Point the webserver's document root at `public/`, not the project root.
+
+### Option B — shared hosting with no terminal (Hostinger, cPanel, etc.)
+
+Since there's no Composer/npm/artisan access on most shared plans, build the
+app fully (`vendor/` and `public/build/` included) before uploading, then
+let a one-time setup **route** do the rest instead of a terminal:
+
+1. Build the deployable copy: `composer install --optimize-autoloader --no-dev && npm run build`.
+2. Zip everything **except** `.env` and `node_modules/`, upload it via the
+   host's File Manager/FTP, and extract it.
+3. In hPanel (or your host's control panel), create a MySQL database + user,
+   and set the site's **document root** to the project's `public/` folder.
+4. Copy `.env.example` to `.env`, fill in `DB_*`, `APP_URL`, and set
+   `DEPLOY_SETUP_TOKEN` to a long random string.
+5. Visit `https://yourdomain.com/deploy-setup/<that-random-string>` once in
+   a browser. It runs `key:generate`, `migrate`, `storage:link` and the
+   seeders for you (see `app/Http/Controllers/DeploySetupController.php`),
+   then locks itself so it can't run twice.
+6. Once it says "Setup complete", delete `DeploySetupController.php` and its
+   route in `routes/web.php` (or just clear `DEPLOY_SETUP_TOKEN` from
+   `.env`) — it's only meant to run once.
+
+### Both options
+
 - Point `FILESYSTEM_DISK`/media library at S3 (or another S3-compatible
   store) for uploaded images in a multi-server deployment.
 - Set `APP_ENV=production`, `APP_DEBUG=false`, a strong `APP_KEY`, and swap
