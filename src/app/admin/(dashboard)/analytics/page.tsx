@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
 import { resolveDateRange, type DateRangeKey } from "@/lib/data/analytics";
@@ -14,7 +15,10 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
   const currency = await resolveCurrentCurrency();
   const f = (n: number) => formatMoney(n, currency);
 
-  const activeFilter = { status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] as const }, createdAt: { gte: range.start, lte: range.end } };
+  const activeFilter = {
+    status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] as OrderStatus[] },
+    createdAt: { gte: range.start, lte: range.end },
+  };
 
   const [byCountry, byCurrency, orders] = await Promise.all([
     prisma.order.groupBy({ by: ["countryCode"], where: activeFilter, _sum: { grandTotal: true }, _count: true }),

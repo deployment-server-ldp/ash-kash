@@ -1,7 +1,8 @@
 import "server-only";
+import type { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-const ACTIVE_ORDER_FILTER = { status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] as const } };
+const ACTIVE_ORDER_FILTER = { status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] as OrderStatus[] } };
 
 export type DateRangeKey = "today" | "7d" | "30d" | "90d" | "year" | "custom";
 
