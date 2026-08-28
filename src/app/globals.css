@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-ivory text-noir antialiased;
+  }
+  ::selection {
+    @apply bg-clay-300 text-noir;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-xs uppercase tracking-wide3 text-clay-600 font-medium;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-xs uppercase tracking-wide2 transition-colors duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-noir text-ivory hover:bg-clay-700;
+  }
+  .btn-outline {
+    @apply btn border border-noir text-noir hover:bg-noir hover:text-ivory;
+  }
+  .btn-ghost {
+    @apply btn text-noir hover:text-clay-600;
+  }
+  .input {
+    @apply w-full border border-stone bg-ivory px-4 py-2.5 text-sm text-noir placeholder:text-noir/40 focus:border-clay-400 focus:outline-none focus:ring-1 focus:ring-clay-400;
+  }
+  .label {
+    @apply mb-1.5 block text-xs uppercase tracking-wide text-noir/70;
+  }
+  .container-boutique {
+    @apply mx-auto w-full max-w-8xl px-4 sm:px-6 lg:px-10;
+  }
+}
