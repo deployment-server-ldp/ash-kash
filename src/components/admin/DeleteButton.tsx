@@ -18,7 +18,7 @@ export function DeleteButton({
       type="button"
       disabled={pending}
       onClick={() => {
-        if (confirm(confirmText)) startTransition(() => action());
+        if (confirm(confirmText)) startTransition(async () => { await action(); });
       }}
       className="text-xs uppercase tracking-wide text-red-600 hover:underline disabled:opacity-50"
     >

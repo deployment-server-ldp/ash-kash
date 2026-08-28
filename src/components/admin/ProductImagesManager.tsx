@@ -34,7 +34,7 @@ export function ProductImagesManager({ productId, images }: { productId: string;
                 {!img.isPrimary ? (
                   <button
                     disabled={pending}
-                    onClick={() => startTransition(() => setPrimaryImage(img.id, productId))}
+                    onClick={() => startTransition(async () => { await setPrimaryImage(img.id, productId); })}
                     className="underline"
                   >
                     Make Primary
@@ -42,7 +42,7 @@ export function ProductImagesManager({ productId, images }: { productId: string;
                 ) : null}
                 <button
                   disabled={pending}
-                  onClick={() => startTransition(() => deleteProductImage(img.id, productId))}
+                  onClick={() => startTransition(async () => { await deleteProductImage(img.id, productId); })}
                   className="text-red-600 underline"
                 >
                   Delete

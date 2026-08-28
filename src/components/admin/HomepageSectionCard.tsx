@@ -41,7 +41,7 @@ export function HomepageSectionCard({
         <div className="flex items-center gap-3 text-xs uppercase tracking-wide">
           <button
             disabled={pending}
-            onClick={() => startTransition(() => toggleHomepageSection(section.id, !section.isActive))}
+            onClick={() => startTransition(async () => { await toggleHomepageSection(section.id, !section.isActive); })}
             className={section.isActive ? "text-clay-600 underline" : "text-noir/50 underline"}
           >
             {section.isActive ? "Enabled" : "Disabled"}

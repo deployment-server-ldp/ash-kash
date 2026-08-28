@@ -13,7 +13,7 @@ export function CartLineControls({ itemId, quantity, maxQuantity }: { itemId: st
         <button
           disabled={pending}
           className="p-2"
-          onClick={() => startTransition(() => updateCartItemQuantity(itemId, quantity - 1))}
+          onClick={() => startTransition(async () => { await updateCartItemQuantity(itemId, quantity - 1); })}
           aria-label="Decrease quantity"
         >
           <Minus className="h-3.5 w-3.5" />
@@ -22,7 +22,7 @@ export function CartLineControls({ itemId, quantity, maxQuantity }: { itemId: st
         <button
           disabled={pending || quantity >= maxQuantity}
           className="p-2"
-          onClick={() => startTransition(() => updateCartItemQuantity(itemId, quantity + 1))}
+          onClick={() => startTransition(async () => { await updateCartItemQuantity(itemId, quantity + 1); })}
           aria-label="Increase quantity"
         >
           <Plus className="h-3.5 w-3.5" />
@@ -30,7 +30,7 @@ export function CartLineControls({ itemId, quantity, maxQuantity }: { itemId: st
       </div>
       <button
         disabled={pending}
-        onClick={() => startTransition(() => removeCartItem(itemId))}
+        onClick={() => startTransition(async () => { await removeCartItem(itemId); })}
         className="text-xs uppercase tracking-wide text-noir/50 hover:text-noir"
       >
         Remove

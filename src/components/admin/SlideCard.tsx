@@ -32,13 +32,13 @@ export function SlideCard({ sliderId, slide, isFirst, isLast }: { sliderId: stri
           <p className="font-medium">{slide.title || "(untitled slide)"}</p>
         </div>
         <div className="flex items-center gap-3 text-xs uppercase tracking-wide">
-          <button disabled={pending} onClick={() => startTransition(() => toggleSlide(slide.id, !slide.isActive))} className="underline">
+          <button disabled={pending} onClick={() => startTransition(async () => { await toggleSlide(slide.id, !slide.isActive); })} className="underline">
             {slide.isActive ? "Active" : "Inactive"}
           </button>
           <button onClick={() => setEditing((v) => !v)} className="underline">
             {editing ? "Close" : "Edit"}
           </button>
-          <button disabled={pending} onClick={() => startTransition(() => duplicateSlide(slide.id))} className="underline">
+          <button disabled={pending} onClick={() => startTransition(async () => { await duplicateSlide(slide.id); })} className="underline">
             Duplicate
           </button>
           <DeleteButton action={deleteSlide.bind(null, slide.id)} />

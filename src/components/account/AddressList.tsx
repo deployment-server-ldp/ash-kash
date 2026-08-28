@@ -29,7 +29,7 @@ export function AddressList({ addresses, countries }: { addresses: Address[]; co
             <p>{addr.phone}</p>
             <button
               disabled={pending}
-              onClick={() => startTransition(() => deleteAddress(addr.id))}
+              onClick={() => startTransition(async () => { await deleteAddress(addr.id); })}
               className="mt-3 text-xs uppercase tracking-wide text-red-600 underline"
             >
               Delete

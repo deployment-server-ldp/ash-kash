@@ -16,7 +16,7 @@ export function CouponForm({ appliedCode, error }: { appliedCode: string | null;
         </span>
         <button
           disabled={pending}
-          onClick={() => startTransition(() => removeCoupon())}
+          onClick={() => startTransition(async () => { await removeCoupon(); })}
           className="text-noir/50 underline hover:text-noir"
         >
           Remove

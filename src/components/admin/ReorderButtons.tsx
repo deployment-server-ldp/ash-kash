@@ -20,7 +20,7 @@ export function ReorderButtons({
     <div className="flex gap-1">
       <button
         disabled={pending || disableUp}
-        onClick={() => startTransition(() => onMoveUp())}
+        onClick={() => startTransition(async () => { await onMoveUp(); })}
         aria-label="Move up"
         className="rounded p-1 hover:bg-stone disabled:opacity-30"
       >
@@ -28,7 +28,7 @@ export function ReorderButtons({
       </button>
       <button
         disabled={pending || disableDown}
-        onClick={() => startTransition(() => onMoveDown())}
+        onClick={() => startTransition(async () => { await onMoveDown(); })}
         aria-label="Move down"
         className="rounded p-1 hover:bg-stone disabled:opacity-30"
       >
