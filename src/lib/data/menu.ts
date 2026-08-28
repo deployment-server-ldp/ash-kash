@@ -46,13 +46,14 @@ export const getMenu = cache(async (location: MenuLocation): Promise<ResolvedMen
     },
   });
   if (!menu) return [];
+  const items = menu.items;
 
   const categoryIds = new Set<string>();
   const collectionIds = new Set<string>();
   const productIds = new Set<string>();
   const pageIds = new Set<string>();
 
-  for (const item of menu.items) {
+  for (const item of items) {
     for (const target of [item, ...item.children]) {
       if (target.categoryId) categoryIds.add(target.categoryId);
       if (target.collectionId) collectionIds.add(target.collectionId);
@@ -73,7 +74,7 @@ export const getMenu = cache(async (location: MenuLocation): Promise<ResolvedMen
   const prodMap = new Map(products.map((p) => [p.id, p.slug]));
   const pageMap = new Map(pages.map((p) => [p.id, p.slug]));
 
-  function build(item: (typeof menu.items)[number]): ResolvedMenuItem {
+  function build(item: (typeof items)[number]): ResolvedMenuItem {
     return {
       id: item.id,
       label: item.label,
@@ -86,10 +87,10 @@ export const getMenu = cache(async (location: MenuLocation): Promise<ResolvedMen
         pageSlug: item.pageId ? pageMap.get(item.pageId) : null,
       }),
       children: item.children.map((child) =>
-        build({ ...child, children: [] } as (typeof menu.items)[number])
+        build({ ...child, children: [] } as (typeof items)[number])
       ),
     };
   }
 
-  return menu.items.map(build);
+  return items.map(build);
 });
