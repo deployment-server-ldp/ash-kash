@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -39,7 +40,7 @@ export async function saveCollection(id: string | null, formData: FormData) {
           isNewArrival: parsed.ruleNewArrival || undefined,
           isSale: parsed.ruleSale || undefined,
         }
-      : null;
+      : Prisma.JsonNull;
 
   const data = {
     name: parsed.name,

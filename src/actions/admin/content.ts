@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdminAction } from "@/lib/auth/require-admin-action";
@@ -41,7 +42,7 @@ export async function createHomepageSection(formData: FormData) {
   const settings =
     parsed.type === "FEATURED_PRODUCTS" || parsed.type === "NEW_ARRIVALS" || parsed.type === "BEST_SELLERS"
       ? { source: parsed.source || "latest", limit: parsed.limit ? Number(parsed.limit) : 8, productIds: parsed.productIds }
-      : null;
+      : Prisma.JsonNull;
 
   const max = await prisma.homepageSection.aggregate({ _max: { sortOrder: true } });
   await prisma.homepageSection.create({
@@ -70,7 +71,7 @@ export async function updateHomepageSection(id: string, formData: FormData) {
   const settings =
     parsed.type === "FEATURED_PRODUCTS" || parsed.type === "NEW_ARRIVALS" || parsed.type === "BEST_SELLERS"
       ? { source: parsed.source || "latest", limit: parsed.limit ? Number(parsed.limit) : 8, productIds: parsed.productIds }
-      : null;
+      : Prisma.JsonNull;
 
   await prisma.homepageSection.update({
     where: { id },
