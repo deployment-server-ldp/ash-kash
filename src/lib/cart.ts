@@ -68,22 +68,21 @@ export async function mergeGuestCartIntoUser(userId: string) {
   });
 
   for (const item of guestCart.items) {
-    await prisma.cartItem.upsert({
-      where: {
-        cartId_productId_productVariantId: {
+    const existing = await prisma.cartItem.findFirst({
+      where: { cartId: userCart.id, productId: item.productId, productVariantId: item.productVariantId },
+    });
+    if (existing) {
+      await prisma.cartItem.update({ where: { id: existing.id }, data: { quantity: { increment: item.quantity } } });
+    } else {
+      await prisma.cartItem.create({
+        data: {
           cartId: userCart.id,
           productId: item.productId,
           productVariantId: item.productVariantId,
+          quantity: item.quantity,
         },
-      },
-      create: {
-        cartId: userCart.id,
-        productId: item.productId,
-        productVariantId: item.productVariantId,
-        quantity: item.quantity,
-      },
-      update: { quantity: { increment: item.quantity } },
-    });
+      });
+    }
   }
 
   await prisma.cart.delete({ where: { id: guestCart.id } });

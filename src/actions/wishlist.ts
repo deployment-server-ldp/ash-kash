@@ -15,14 +15,8 @@ export async function toggleWishlist(productId: string, productVariantId?: strin
   if (!session) return { success: false, error: "Please sign in to save items to your wishlist." };
 
   const wishlist = await getOrCreateWishlist(session.sub);
-  const existing = await prisma.wishlistItem.findUnique({
-    where: {
-      wishlistId_productId_productVariantId: {
-        wishlistId: wishlist.id,
-        productId,
-        productVariantId: productVariantId ?? null,
-      },
-    },
+  const existing = await prisma.wishlistItem.findFirst({
+    where: { wishlistId: wishlist.id, productId, productVariantId: productVariantId ?? null },
   });
 
   if (existing) {

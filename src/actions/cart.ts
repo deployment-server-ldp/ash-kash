@@ -41,14 +41,8 @@ export async function addToCart(input: z.infer<typeof addSchema>): Promise<Actio
     }
 
     const cart = await getOrCreateCart();
-    const existing = await prisma.cartItem.findUnique({
-      where: {
-        cartId_productId_productVariantId: {
-          cartId: cart.id,
-          productId: data.productId,
-          productVariantId: variantId,
-        },
-      },
+    const existing = await prisma.cartItem.findFirst({
+      where: { cartId: cart.id, productId: data.productId, productVariantId: variantId },
     });
 
     const nextQty = (existing?.quantity ?? 0) + data.quantity;
