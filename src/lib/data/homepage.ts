@@ -39,14 +39,6 @@ export async function resolveFeaturedProducts(settings: unknown): Promise<Produc
     return (await getProductsByIds(config.productIds)).slice(0, limit);
   }
 
-  const sortMap = {
-    latest: "newest",
-    best_seller: "best_selling",
-    new_arrival: "newest",
-    sale: "newest",
-    featured: "featured",
-  } as const;
-
   const filterFlags: Record<string, boolean> = {};
   if (config.source === "featured") filterFlags.isFeatured = true;
   if (config.source === "best_seller") filterFlags.isBestSeller = true;
@@ -62,7 +54,7 @@ export async function resolveFeaturedProducts(settings: unknown): Promise<Produc
       category: { select: { name: true, slug: true } },
     },
     orderBy:
-      config.source && sortMap[config.source] === "best_selling"
+      config.source === "best_seller"
         ? [{ isBestSeller: "desc" }, { reviewsCount: "desc" }]
         : [{ createdAt: "desc" }],
     take: limit,
