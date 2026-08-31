@@ -965,6 +965,8 @@ model Seo {
 
 model StoreSetting {
   id                     Int      @id @default(1)
+  maintenanceMode        Boolean  @default(true)
+  maintenanceMessage     String?  @db.Text
   storeName              String   @default("Ash & Kash")
   logoUrl                String?
   faviconUrl             String?

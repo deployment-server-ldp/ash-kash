@@ -7,6 +7,8 @@ export const getStoreSettings = cache(async () => {
   return (
     settings ?? {
       id: 1,
+      maintenanceMode: true,
+      maintenanceMessage: null,
       storeName: "Ash & Kash",
       logoUrl: null,
       faviconUrl: null,

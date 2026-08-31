@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getStoreSettings } from "@/lib/data/settings";
 import { requireAdmin } from "@/lib/auth/guards";
-import { updateCheckoutSettings, updateGeneralSettings, updateNewsletterSettings } from "@/actions/admin/settings";
+import { updateCheckoutSettings, updateGeneralSettings, updateMaintenanceMode, updateNewsletterSettings } from "@/actions/admin/settings";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { prisma } from "@/lib/prisma";
 
@@ -16,6 +16,33 @@ export default async function AdminSettingsPage() {
   return (
     <div className="space-y-10">
       <h1 className="font-display text-3xl">Settings</h1>
+
+      <section className={`max-w-2xl border p-6 ${settings.maintenanceMode ? "border-amber-400 bg-amber-50" : "border-stone bg-ivory"}`}>
+        <h2 className="mb-2 font-display text-lg">Site Visibility</h2>
+        <p className="mb-4 text-sm text-noir/60">
+          While maintenance mode is on, visitors see an &quot;Under Development&quot; page — only signed-in admins can
+          see and preview the real storefront. Turn it off when you&apos;re ready to launch.
+        </p>
+        <form action={updateMaintenanceMode} className="space-y-4">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" name="maintenanceMode" value="true" defaultChecked={settings.maintenanceMode} className="accent-clay-600" />
+            {settings.maintenanceMode ? "Site is under development (not live to visitors)" : "Site is live"}
+          </label>
+          <div>
+            <label className="label">Under-development message (optional)</label>
+            <textarea
+              name="maintenanceMessage"
+              defaultValue={settings.maintenanceMessage ?? ""}
+              rows={2}
+              placeholder="We're putting the finishing touches on something beautiful. Please check back soon."
+              className="input"
+            />
+          </div>
+          <button type="submit" className="btn-primary">
+            Save
+          </button>
+        </form>
+      </section>
 
       <section className="max-w-2xl border border-stone bg-ivory p-6">
         <h2 className="mb-4 font-display text-lg">Brand &amp; Contact</h2>

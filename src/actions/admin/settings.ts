@@ -9,6 +9,23 @@ async function ensureSettingsRow() {
   return prisma.storeSetting.upsert({ where: { id: 1 }, create: { id: 1 }, update: {} });
 }
 
+const maintenanceSchema = z.object({
+  maintenanceMode: z.coerce.boolean().optional(),
+  maintenanceMessage: z.string().optional(),
+});
+
+export async function updateMaintenanceMode(formData: FormData) {
+  await requireAdminAction("settings", "edit");
+  await ensureSettingsRow();
+  const parsed = maintenanceSchema.parse(Object.fromEntries(formData.entries()));
+  await prisma.storeSetting.update({
+    where: { id: 1 },
+    data: { maintenanceMode: parsed.maintenanceMode ?? false, maintenanceMessage: parsed.maintenanceMessage || null },
+  });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+}
+
 const generalSchema = z.object({
   storeName: z.string().min(1),
   logoUrl: z.string().optional(),
