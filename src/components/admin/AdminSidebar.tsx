@@ -67,7 +67,7 @@ export function AdminSidebar({ role, storeName, logoUrl }: { role: UserRole; sto
     <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-stone bg-ivory">
       <div className="border-b border-stone px-6 py-5">
         {logoUrl ? (
-          <Image src={logoUrl} alt={storeName} width={160} height={40} className="h-9 w-auto" />
+          <Image src={logoUrl} alt={storeName} width={220} height={70} className="h-14 w-auto" />
         ) : (
           <p className="font-display text-lg">{storeName}</p>
         )}

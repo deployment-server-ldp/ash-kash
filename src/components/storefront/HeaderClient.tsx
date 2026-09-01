@@ -31,7 +31,7 @@ export function HeaderClient({
 
   return (
     <header className="sticky top-0 z-40 border-b border-stone bg-ivory/95 backdrop-blur">
-      <div className="container-boutique flex h-20 items-center justify-between">
+      <div className="container-boutique flex h-24 items-center justify-between sm:h-28">
         <div className="flex items-center gap-4 lg:hidden">
           <button onClick={toggleMobileMenu} aria-label="Open menu">
             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -39,7 +39,11 @@ export function HeaderClient({
         </div>
 
         <Link href="/" className="font-display text-2xl tracking-wide">
-          {logoUrl ? <Image src={logoUrl} alt={storeName} width={140} height={40} className="h-9 w-auto" /> : storeName}
+          {logoUrl ? (
+            <Image src={logoUrl} alt={storeName} width={260} height={90} className="h-16 w-auto sm:h-20" priority />
+          ) : (
+            storeName
+          )}
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
