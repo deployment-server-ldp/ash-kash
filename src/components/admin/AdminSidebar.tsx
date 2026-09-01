@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { UserRole } from "@prisma/client";
@@ -59,13 +60,17 @@ const NAV: NavGroup[] = [
   },
 ];
 
-export function AdminSidebar({ role }: { role: UserRole }) {
+export function AdminSidebar({ role, storeName, logoUrl }: { role: UserRole; storeName: string; logoUrl: string | null }) {
   const pathname = usePathname();
 
   return (
     <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-stone bg-ivory">
       <div className="border-b border-stone px-6 py-5">
-        <p className="font-display text-lg">Ash &amp; Kash</p>
+        {logoUrl ? (
+          <Image src={logoUrl} alt={storeName} width={160} height={40} className="h-9 w-auto" />
+        ) : (
+          <p className="font-display text-lg">{storeName}</p>
+        )}
         <p className="text-xs text-noir/50">Admin</p>
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4">

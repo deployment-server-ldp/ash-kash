@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Instagram, Facebook } from "lucide-react";
 import { getMenu } from "@/lib/data/menu";
@@ -12,7 +13,11 @@ export async function Footer() {
     <footer className="border-t border-stone bg-ivory">
       <div className="container-boutique grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <h3 className="font-display text-xl">{settings.storeName}</h3>
+          {settings.logoUrl ? (
+            <Image src={settings.logoUrl} alt={settings.storeName} width={160} height={60} className="h-12 w-auto" />
+          ) : (
+            <h3 className="font-display text-xl">{settings.storeName}</h3>
+          )}
           <p className="mt-3 max-w-xs text-sm text-noir/60">
             {settings.footerAbout ?? "Considered pieces for the modern woman — elevated ready-to-wear and enduring essentials."}
           </p>

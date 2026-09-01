@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
@@ -32,7 +33,11 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     <div className="mx-auto max-w-2xl bg-white p-10 text-black print:p-0">
       <div className="mb-8 flex items-start justify-between border-b border-black/20 pb-6">
         <div>
-          <h1 className="font-display text-2xl">{settings.storeName}</h1>
+          {settings.logoUrl ? (
+            <Image src={settings.logoUrl} alt={settings.storeName} width={160} height={56} className="mb-2 h-10 w-auto" />
+          ) : (
+            <h1 className="font-display text-2xl">{settings.storeName}</h1>
+          )}
           {settings.contactAddress ? <p className="text-sm text-black/60">{settings.contactAddress}</p> : null}
           {settings.contactEmail ? <p className="text-sm text-black/60">{settings.contactEmail}</p> : null}
         </div>

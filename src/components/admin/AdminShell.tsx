@@ -10,11 +10,15 @@ export function AdminShell({
   role,
   userName,
   unreadCount,
+  storeName,
+  logoUrl,
   children,
 }: {
   role: UserRole;
   userName: string;
   unreadCount: number;
+  storeName: string;
+  logoUrl: string | null;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -22,14 +26,14 @@ export function AdminShell({
   return (
     <div className="flex min-h-screen bg-stone/40">
       <div className="hidden lg:block">
-        <AdminSidebar role={role} />
+        <AdminSidebar role={role} storeName={storeName} logoUrl={logoUrl} />
       </div>
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-noir/40" onClick={() => setMobileOpen(false)} />
           <div className="relative h-full">
-            <AdminSidebar role={role} />
+            <AdminSidebar role={role} storeName={storeName} logoUrl={logoUrl} />
             <button onClick={() => setMobileOpen(false)} className="absolute right-3 top-4" aria-label="Close menu">
               <X className="h-5 w-5" />
             </button>
