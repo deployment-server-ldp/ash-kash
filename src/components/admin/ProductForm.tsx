@@ -13,6 +13,7 @@ export function ProductForm({
   collections,
   selectedTagIds,
   selectedCollectionIds,
+  baseCurrencyCode,
 }: {
   product: Product | null;
   categories: Category[];
@@ -22,6 +23,7 @@ export function ProductForm({
   collections: Collection[];
   selectedTagIds: string[];
   selectedCollectionIds: string[];
+  baseCurrencyCode: string;
 }) {
   const [trackInventory, setTrackInventory] = useState(product?.trackInventory ?? true);
   const action = saveProduct.bind(null, product?.id ?? null);
@@ -119,15 +121,15 @@ export function ProductForm({
         <h2 className="mb-4 font-display text-lg">Pricing &amp; Inventory</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="label">Price</label>
+            <label className="label">Price ({baseCurrencyCode})</label>
             <input type="number" step="0.01" name="price" defaultValue={product?.price?.toString()} required className="input" />
           </div>
           <div>
-            <label className="label">Compare-at Price</label>
+            <label className="label">Compare-at Price ({baseCurrencyCode})</label>
             <input type="number" step="0.01" name="compareAtPrice" defaultValue={product?.compareAtPrice?.toString() ?? ""} className="input" />
           </div>
           <div>
-            <label className="label">Cost Price</label>
+            <label className="label">Cost Price ({baseCurrencyCode})</label>
             <input type="number" step="0.01" name="costPrice" defaultValue={product?.costPrice?.toString() ?? ""} className="input" />
           </div>
           <div>

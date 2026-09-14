@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { resolveCurrentCurrency } from "@/lib/currency/service";
-import { formatMoney } from "@/lib/currency/format";
+import { getCurrencyByCodeMap } from "@/lib/currency/service";
+import { formatOrderAmount } from "@/lib/currency/format";
 import { StatusBadge } from "@/components/account/StatusBadge";
 
 export const metadata: Metadata = { title: "My Orders" };
@@ -13,7 +13,9 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam ?? 1));
   const pageSize = 10;
-  const currency = await resolveCurrentCurrency();
+  // Each order's total is stored in the currency it was actually placed in — show it as-is,
+  // not re-converted into whatever currency the shopper happens to be browsing with now.
+  const currencyMap = await getCurrencyByCodeMap();
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
@@ -43,7 +45,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                 <p className="text-xs text-noir/50">{order.createdAt.toLocaleDateString()}</p>
               </div>
               <StatusBadge status={order.status} />
-              <span>{formatMoney(Number(order.grandTotal), currency)}</span>
+              <span>{formatOrderAmount(Number(order.grandTotal), order.currencyCode, currencyMap)}</span>
             </Link>
           ))}
         </div>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCartWithItems } from "@/lib/cart";
 import { computeCartTotals } from "@/lib/pricing";
 import { resolveCurrentCurrency } from "@/lib/currency/service";
+import { convertAmount } from "@/lib/currency/format";
 import { generateOrderNumber } from "@/lib/utils";
 
 export class CheckoutError extends Error {}
@@ -40,6 +41,16 @@ export async function createOrderFromCart(input: CheckoutInput) {
   }
 
   const currency = await resolveCurrentCurrency();
+  // All prices computed above are in the store's base currency. Orders are recorded in
+  // the customer's chosen display currency, so every stored amount must be converted now
+  // — this is the one point where that conversion happens; everything downstream (order
+  // totals, invoices, admin views) trusts these numbers as already being in currencyCode.
+  const convert = (baseAmount: number) => convertAmount(baseAmount, currency);
+  const convertedSubtotal = convert(totals.subtotal);
+  const convertedDiscountTotal = convert(totals.discountTotal);
+  const convertedShippingTotal = convert(totals.shippingTotal);
+  const convertedTaxTotal = convert(totals.taxTotal);
+  const convertedGrandTotal = convert(totals.grandTotal);
 
   const order = await prisma.$transaction(async (tx) => {
     // Re-validate stock inside the transaction to guard against race conditions.
@@ -76,11 +87,11 @@ export async function createOrderFromCart(input: CheckoutInput) {
         phone: input.phone,
         currencyCode: currency.code,
         exchangeRateSnapshot: currency.exchangeRate,
-        subtotal: totals.subtotal,
-        discountTotal: totals.discountTotal,
-        shippingTotal: totals.shippingTotal,
-        taxTotal: totals.taxTotal,
-        grandTotal: totals.grandTotal,
+        subtotal: convertedSubtotal,
+        discountTotal: convertedDiscountTotal,
+        shippingTotal: convertedShippingTotal,
+        taxTotal: convertedTaxTotal,
+        grandTotal: convertedGrandTotal,
         shippingAddress,
         billingAddress: shippingAddress,
         shippingMethodId: totals.shippingMethodId,
@@ -94,7 +105,7 @@ export async function createOrderFromCart(input: CheckoutInput) {
     });
 
     for (const item of cart.items) {
-      const unitPrice = Number(item.productVariant?.price ?? item.product.price);
+      const baseUnitPrice = Number(item.productVariant?.price ?? item.product.price);
       await tx.orderItem.create({
         data: {
           orderId: createdOrder.id,
@@ -105,8 +116,8 @@ export async function createOrderFromCart(input: CheckoutInput) {
           sku: item.productVariant?.sku ?? item.product.sku,
           image: item.product.images[0]?.url ?? null,
           quantity: item.quantity,
-          unitPrice,
-          totalPrice: unitPrice * item.quantity,
+          unitPrice: convert(baseUnitPrice),
+          totalPrice: convert(baseUnitPrice * item.quantity),
         },
       });
 
@@ -156,7 +167,7 @@ export async function createOrderFromCart(input: CheckoutInput) {
           couponId: cart.couponId,
           userId: input.userId,
           orderId: createdOrder.id,
-          discountAmount: totals.discountTotal,
+          discountAmount: convertedDiscountTotal,
         },
       });
     }
@@ -172,7 +183,7 @@ export async function createOrderFromCart(input: CheckoutInput) {
       data: {
         type: "NEW_ORDER",
         title: "New order received",
-        message: `Order ${order.orderNumber} was placed for ${currency.symbol}${totals.grandTotal.toFixed(2)}.`,
+        message: `Order ${order.orderNumber} was placed for ${currency.symbol}${convertedGrandTotal.toFixed(2)}.`,
         data: { orderId: order.id },
       },
     })

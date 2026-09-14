@@ -35,3 +35,18 @@ export function formatWithCurrency(amount: number, currency: CurrencyLike): stri
 export function formatMoney(baseAmount: number, currency: CurrencyLike): string {
   return formatWithCurrency(convertAmount(baseAmount, currency), currency);
 }
+
+/**
+ * Recovers the base-currency amount from a value that was already converted at some
+ * point in the past (e.g. an order total, converted and stored using the exchange rate
+ * in effect at checkout time). The inverse of convertAmount.
+ */
+export function toBaseAmount(convertedAmount: number, exchangeRateSnapshot: number): number {
+  return exchangeRateSnapshot > 0 ? convertedAmount / exchangeRateSnapshot : convertedAmount;
+}
+
+/** Formats an amount that is already in its own currency's units — no conversion applied. */
+export function formatOrderAmount(amount: number, currencyCode: string, currencyMap: Map<string, CurrencyLike>): string {
+  const currency = currencyMap.get(currencyCode);
+  return currency ? formatWithCurrency(amount, currency) : `${amount.toFixed(2)} ${currencyCode}`;
+}

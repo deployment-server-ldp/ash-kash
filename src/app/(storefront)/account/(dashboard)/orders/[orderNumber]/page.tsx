@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { resolveCurrentCurrency } from "@/lib/currency/service";
-import { formatMoney } from "@/lib/currency/format";
+import { getCurrencyByCodeMap } from "@/lib/currency/service";
+import { formatOrderAmount } from "@/lib/currency/format";
 import { StatusBadge } from "@/components/account/StatusBadge";
 
 export const metadata: Metadata = { title: "Order Details" };
@@ -13,7 +13,7 @@ type Params = { orderNumber: string };
 export default async function OrderDetailPage({ params }: { params: Promise<Params> }) {
   const { orderNumber } = await params;
   const session = await getSession();
-  const currency = await resolveCurrentCurrency();
+  const currencyMap = await getCurrencyByCodeMap();
 
   const order = await prisma.order.findUnique({
     where: { orderNumber },
@@ -22,7 +22,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<Para
 
   if (!order || order.userId !== session!.sub) notFound();
 
-  const f = (n: number) => formatMoney(n, currency);
+  // The order's total is fixed in the currency it was placed in — never re-converted.
+  const f = (n: number) => formatOrderAmount(n, order.currencyCode, currencyMap);
   const address = order.shippingAddress as Record<string, string>;
 
   return (

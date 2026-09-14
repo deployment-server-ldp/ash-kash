@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
-import { resolveCurrentCurrency } from "@/lib/currency/service";
-import { formatMoney } from "@/lib/currency/format";
+import { getCurrencyByCodeMap } from "@/lib/currency/service";
+import { formatOrderAmount } from "@/lib/currency/format";
 import { StatusBadge } from "@/components/account/StatusBadge";
 import type { OrderStatus } from "@prisma/client";
 
@@ -16,7 +16,10 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   await requireAdmin("orders");
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page ?? 1));
-  const currency = await resolveCurrentCurrency();
+  // Each order was placed in — and its total stored in — its own currency, captured at
+  // checkout. Show it as-is rather than re-converting it into whatever currency the
+  // admin happens to be browsing the storefront with right now.
+  const currencyMap = await getCurrencyByCodeMap();
 
   const where = {
     ...(sp.q
@@ -83,7 +86,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                   <span className="text-xs text-noir/50">{o.phone}</span>
                 </td>
                 <td className="p-3">{o._count.items}</td>
-                <td className="p-3">{formatMoney(Number(o.grandTotal), currency)}</td>
+                <td className="p-3">{formatOrderAmount(Number(o.grandTotal), o.currencyCode, currencyMap)}</td>
                 <td className="p-3">
                   <StatusBadge status={o.status} />
                 </td>

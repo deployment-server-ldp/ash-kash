@@ -969,8 +969,8 @@ model StoreSetting {
   maintenanceMode        Boolean  @default(true)
   maintenanceMessage     String?  @db.Text
   storeName              String   @default("Ash & Kash")
-  logoUrl                String?
-  faviconUrl             String?
+  logoUrl                String?  @db.Text
+  faviconUrl             String?  @db.Text
   brandColor             String   @default("#a97a3b")
   contactEmail           String?
   contactPhone           String?

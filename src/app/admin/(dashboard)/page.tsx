@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getDashboardMetrics, resolveDateRange, type DateRangeKey } from "@/lib/data/analytics";
-import { resolveCurrentCurrency } from "@/lib/currency/service";
-import { formatMoney } from "@/lib/currency/format";
+import { getDefaultCurrency, getCurrencyByCodeMap } from "@/lib/currency/service";
+import { formatMoney, formatOrderAmount } from "@/lib/currency/format";
 import { StatCard } from "@/components/admin/StatCard";
 import { SalesTrendChart } from "@/components/admin/SalesTrendChart";
 import { StatusBadge } from "@/components/account/StatusBadge";
@@ -25,8 +25,13 @@ export default async function AdminDashboardPage({
   const sp = await searchParams;
   const rangeKey = sp.range ?? "30d";
   const range = resolveDateRange(rangeKey, sp.from, sp.to);
-  const metrics = await getDashboardMetrics(range);
-  const currency = await resolveCurrentCurrency();
+  const [metrics, currency, currencyMap] = await Promise.all([
+    getDashboardMetrics(range),
+    getDefaultCurrency(),
+    getCurrencyByCodeMap(),
+  ]);
+  // Total sales / avg order value are normalized totals in the base currency; individual
+  // recent-order amounts are shown in whatever currency each order was actually placed in.
   const f = (n: number) => formatMoney(n, currency);
 
   return (
@@ -47,9 +52,9 @@ export default async function AdminDashboardPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="Total Sales" value={f(metrics.totalSales)} tone="success" />
+        <StatCard label={`Total Sales (${currency.code})`} value={f(metrics.totalSales)} tone="success" />
         <StatCard label="Orders" value={metrics.orderCount} />
-        <StatCard label="Avg. Order Value" value={f(metrics.avgOrderValue)} />
+        <StatCard label={`Avg. Order Value (${currency.code})`} value={f(metrics.avgOrderValue)} />
         <StatCard label="Pending Orders" value={metrics.pendingCount} tone={metrics.pendingCount > 0 ? "warning" : "default"} />
         <StatCard label="New Customers" value={metrics.customerCount} />
         <StatCard label="Products" value={metrics.productCount} />
@@ -75,7 +80,7 @@ export default async function AdminDashboardPage({
               >
                 <span className="font-medium">{order.orderNumber}</span>
                 <StatusBadge status={order.status} />
-                <span>{f(Number(order.grandTotal))}</span>
+                <span>{formatOrderAmount(Number(order.grandTotal), order.currencyCode, currencyMap)}</span>
               </Link>
             ))}
             {metrics.recentOrders.length === 0 ? <p className="py-4 text-sm text-noir/50">No orders yet.</p> : null}

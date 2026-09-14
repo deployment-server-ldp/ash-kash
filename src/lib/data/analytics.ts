@@ -1,6 +1,7 @@
 import "server-only";
 import type { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { toBaseAmount } from "@/lib/currency/format";
 
 const ACTIVE_ORDER_FILTER = { status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] as OrderStatus[] } };
 
@@ -42,7 +43,7 @@ export async function getDashboardMetrics(range: { start: Date; end: Date }) {
   const dateFilter = { createdAt: { gte: range.start, lte: range.end } };
 
   const [
-    totalSalesAgg,
+    salesOrders,
     orderCount,
     pendingCount,
     deliveredCount,
@@ -52,7 +53,13 @@ export async function getDashboardMetrics(range: { start: Date; end: Date }) {
     recentOrders,
     bestSellers,
   ] = await Promise.all([
-    prisma.order.aggregate({ where: { ...ACTIVE_ORDER_FILTER, ...dateFilter }, _sum: { grandTotal: true } }),
+    // Orders can be placed in different currencies, and grandTotal is stored in each
+    // order's own currency — a SQL SUM would add unlike units together. Fetch the rows
+    // (with their checkout-time rate snapshot) and normalize to the base currency in JS.
+    prisma.order.findMany({
+      where: { ...ACTIVE_ORDER_FILTER, ...dateFilter },
+      select: { grandTotal: true, exchangeRateSnapshot: true, createdAt: true },
+    }),
     prisma.order.count({ where: dateFilter }),
     prisma.order.count({ where: { status: "PENDING" } }),
     prisma.order.count({ where: { status: "DELIVERED", ...dateFilter } }),
@@ -83,7 +90,8 @@ export async function getDashboardMetrics(range: { start: Date; end: Date }) {
     : [];
   const bestSellerMap = new Map(bestSellerProducts.map((p) => [p.id, p]));
 
-  const totalSales = Number(totalSalesAgg._sum.grandTotal ?? 0);
+  const salesInBase = salesOrders.map((o) => toBaseAmount(Number(o.grandTotal), Number(o.exchangeRateSnapshot)));
+  const totalSales = salesInBase.reduce((sum, n) => sum + n, 0);
   const avgOrderValue = orderCount > 0 ? totalSales / orderCount : 0;
 
   // daily trend
@@ -92,14 +100,10 @@ export async function getDashboardMetrics(range: { start: Date; end: Date }) {
   const dayMs = 24 * 60 * 60 * 1000;
   const dayCount = Math.min(90, Math.round((range.end.getTime() - range.start.getTime()) / dayMs) + 1);
 
-  const dailyTotals = await prisma.order.findMany({
-    where: { ...ACTIVE_ORDER_FILTER, ...dateFilter },
-    select: { grandTotal: true, createdAt: true },
-  });
   const totalsByDay = new Map<string, number>();
-  for (const o of dailyTotals) {
-    const key = o.createdAt.toISOString().slice(0, 10);
-    totalsByDay.set(key, (totalsByDay.get(key) ?? 0) + Number(o.grandTotal));
+  for (let i = 0; i < salesOrders.length; i++) {
+    const key = salesOrders[i]!.createdAt.toISOString().slice(0, 10);
+    totalsByDay.set(key, (totalsByDay.get(key) ?? 0) + salesInBase[i]!);
   }
   for (let i = 0; i < dayCount; i++) {
     const key = cursor.toISOString().slice(0, 10);

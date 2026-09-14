@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
+import { getDefaultCurrency } from "@/lib/currency/service";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ProductImagesManager } from "@/components/admin/ProductImagesManager";
 import { ProductVariantsManager } from "@/components/admin/ProductVariantsManager";
@@ -13,7 +14,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   await requireAdmin("products", "edit");
   const { id } = await params;
 
-  const [product, categories, brands, tags, sizeGuides, collections, sizes, colors] = await Promise.all([
+  const [product, categories, brands, tags, sizeGuides, collections, sizes, colors, baseCurrency] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: {
@@ -30,6 +31,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     prisma.collection.findMany({ orderBy: { name: "asc" } }),
     prisma.size.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.color.findMany({ orderBy: { sortOrder: "asc" } }),
+    getDefaultCurrency(),
   ]);
 
   if (!product) notFound();
@@ -62,6 +64,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         collections={collections}
         selectedTagIds={product.tags.map((t) => t.tagId)}
         selectedCollectionIds={product.collections.map((c) => c.collectionId)}
+        baseCurrencyCode={baseCurrency.code}
       />
     </div>
   );

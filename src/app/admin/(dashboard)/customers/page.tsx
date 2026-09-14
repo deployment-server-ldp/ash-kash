@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
-import { resolveCurrentCurrency } from "@/lib/currency/service";
-import { formatMoney } from "@/lib/currency/format";
+import { getDefaultCurrency } from "@/lib/currency/service";
+import { formatMoney, toBaseAmount } from "@/lib/currency/format";
 
 export const metadata: Metadata = { title: "Customers" };
 const PAGE_SIZE = 20;
@@ -12,7 +12,7 @@ export default async function AdminCustomersPage({ searchParams }: { searchParam
   await requireAdmin("customers");
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page ?? 1));
-  const currency = await resolveCurrentCurrency();
+  const currency = await getDefaultCurrency();
 
   const where = {
     userRole: "CUSTOMER" as const,
@@ -30,12 +30,20 @@ export default async function AdminCustomersPage({ searchParams }: { searchParam
     prisma.user.count({ where }),
   ]);
 
-  const totals = await prisma.order.groupBy({
-    by: ["userId"],
+  // Orders can be placed in different currencies, and grandTotal is stored in each order's
+  // own currency — so a plain SQL SUM across orders would add unlike units together. Pull
+  // each order's amount + the exchange rate snapshot from checkout time and normalize back
+  // to the base currency before summing.
+  const customerOrders = await prisma.order.findMany({
     where: { userId: { in: customers.map((c) => c.id) }, status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] } },
-    _sum: { grandTotal: true },
+    select: { userId: true, grandTotal: true, exchangeRateSnapshot: true },
   });
-  const totalMap = new Map(totals.map((t) => [t.userId, Number(t._sum.grandTotal ?? 0)]));
+  const totalMap = new Map<string, number>();
+  for (const o of customerOrders) {
+    if (!o.userId) continue;
+    const base = toBaseAmount(Number(o.grandTotal), Number(o.exchangeRateSnapshot));
+    totalMap.set(o.userId, (totalMap.get(o.userId) ?? 0) + base);
+  }
 
   return (
     <div>
@@ -54,7 +62,7 @@ export default async function AdminCustomersPage({ searchParams }: { searchParam
               <th className="p-3">Email</th>
               <th className="p-3">Phone</th>
               <th className="p-3">Orders</th>
-              <th className="p-3">Total Spent</th>
+              <th className="p-3">Total Spent ({currency.code})</th>
               <th className="p-3">Joined</th>
             </tr>
           </thead>

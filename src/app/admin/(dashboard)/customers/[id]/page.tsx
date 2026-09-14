@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
-import { resolveCurrentCurrency } from "@/lib/currency/service";
-import { formatMoney } from "@/lib/currency/format";
+import { getDefaultCurrency, getCurrencyByCodeMap } from "@/lib/currency/service";
+import { formatMoney, formatOrderAmount, toBaseAmount } from "@/lib/currency/format";
 import { StatusBadge } from "@/components/account/StatusBadge";
 
 export const metadata: Metadata = { title: "Customer Details" };
@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Customer Details" };
 export default async function AdminCustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin("customers");
   const { id } = await params;
-  const currency = await resolveCurrentCurrency();
+  const [currency, currencyMap] = await Promise.all([getDefaultCurrency(), getCurrencyByCodeMap()]);
 
   const customer = await prisma.user.findUnique({
     where: { id },
@@ -20,9 +20,11 @@ export default async function AdminCustomerDetailPage({ params }: { params: Prom
   });
   if (!customer) notFound();
 
+  // Orders can be in different currencies; normalize each back to the base currency
+  // (using its own checkout-time rate snapshot) before summing.
   const totalSpent = customer.orders
     .filter((o) => !["CANCELLED", "RETURNED", "REFUNDED"].includes(o.status))
-    .reduce((sum, o) => sum + Number(o.grandTotal), 0);
+    .reduce((sum, o) => sum + toBaseAmount(Number(o.grandTotal), Number(o.exchangeRateSnapshot)), 0);
 
   return (
     <div>
@@ -39,7 +41,7 @@ export default async function AdminCustomerDetailPage({ params }: { params: Prom
               >
                 <span>{o.orderNumber}</span>
                 <StatusBadge status={o.status} />
-                <span>{formatMoney(Number(o.grandTotal), currency)}</span>
+                <span>{formatOrderAmount(Number(o.grandTotal), o.currencyCode, currencyMap)}</span>
               </Link>
             ))}
             {customer.orders.length === 0 ? <p className="p-4 text-sm text-noir/50">No orders yet.</p> : null}
@@ -51,7 +53,7 @@ export default async function AdminCustomerDetailPage({ params }: { params: Prom
             <p className="mb-3">{customer.email}</p>
             <p className="text-noir/60">Phone</p>
             <p className="mb-3">{customer.phone ?? "—"}</p>
-            <p className="text-noir/60">Total Spent</p>
+            <p className="text-noir/60">Total Spent ({currency.code})</p>
             <p className="text-lg font-medium">{formatMoney(totalSpent, currency)}</p>
           </div>
           <div className="border border-stone bg-ivory p-6">

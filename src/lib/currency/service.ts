@@ -85,6 +85,15 @@ export const getDefaultCurrency = cache(async (): Promise<CurrencyDTO> => {
   return currency ? toDTO(currency) : FALLBACK_CURRENCY;
 });
 
+/**
+ * Every currency (active or not) keyed by code, for formatting historical records — like
+ * orders — in their own stored currency rather than the currently active/browsing one.
+ */
+export const getCurrencyByCodeMap = cache(async (): Promise<Map<string, CurrencyDTO>> => {
+  const currencies = await prisma.currency.findMany();
+  return new Map(currencies.map((c) => [c.code, toDTO(c)]));
+});
+
 async function getCurrencyForCountry(iso2: string): Promise<CurrencyDTO | null> {
   const country = await prisma.country.findUnique({
     where: { iso2: iso2.toUpperCase() },

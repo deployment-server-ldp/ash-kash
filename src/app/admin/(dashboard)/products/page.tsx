@@ -4,7 +4,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/rbac";
-import { resolveCurrentCurrency } from "@/lib/currency/service";
+import { getDefaultCurrency } from "@/lib/currency/service";
 import { formatMoney } from "@/lib/currency/format";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { deleteProduct } from "@/actions/admin/products";
@@ -19,7 +19,9 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   const session = await requireAdmin("products");
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page ?? 1));
-  const currency = await resolveCurrentCurrency();
+  // Product prices are entered and stored in the store's base currency — always show them
+  // as-is, never converted to whatever currency the admin happened to browse the storefront in.
+  const currency = await getDefaultCurrency();
 
   const where = {
     ...(sp.q ? { OR: [{ name: { contains: sp.q } }, { sku: { contains: sp.q } }] } : {}),
@@ -67,7 +69,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             <tr className="border-b border-stone bg-stone/40 text-left">
               <th className="p-3">Product</th>
               <th className="p-3">Category</th>
-              <th className="p-3">Price</th>
+              <th className="p-3">Price ({currency.code})</th>
               <th className="p-3">Stock</th>
               <th className="p-3">Status</th>
               <th className="p-3" />
