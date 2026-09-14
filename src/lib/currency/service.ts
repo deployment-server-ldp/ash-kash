@@ -48,6 +48,27 @@ const FALLBACK_CURRENCY: CurrencyDTO = {
   isDefault: true,
 };
 
+const SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000; // refresh live rates at most once a day
+let syncInFlight = false;
+
+/** Fires a background live-rate refresh if the non-default currencies look stale. Never blocks the request. */
+function maybeAutoSyncRates(currencies: { isDefault: boolean; updatedAt: Date }[]) {
+  if (syncInFlight) return;
+  const others = currencies.filter((c) => !c.isDefault);
+  if (others.length === 0) return;
+  let oldest = others[0]!.updatedAt;
+  for (const c of others) if (c.updatedAt < oldest) oldest = c.updatedAt;
+  if (Date.now() - oldest.getTime() < SYNC_INTERVAL_MS) return;
+
+  syncInFlight = true;
+  import("./sync")
+    .then(({ syncExchangeRates }) => syncExchangeRates())
+    .catch(() => {})
+    .finally(() => {
+      syncInFlight = false;
+    });
+}
+
 /** Cached per-request: all active currencies. */
 export const getActiveCurrencies = cache(async (): Promise<CurrencyDTO[]> => {
   const currencies = await prisma.currency.findMany({
@@ -55,6 +76,7 @@ export const getActiveCurrencies = cache(async (): Promise<CurrencyDTO[]> => {
     orderBy: { code: "asc" },
   });
   if (currencies.length === 0) return [FALLBACK_CURRENCY];
+  maybeAutoSyncRates(currencies);
   return currencies.map(toDTO);
 });
 

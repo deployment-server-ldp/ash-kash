@@ -687,6 +687,7 @@ model Currency {
   decimalSeparator    String         @default(".") @db.VarChar(2)
   isDefault           Boolean        @default(false)
   isActive            Boolean        @default(true)
+  autoUpdate          Boolean        @default(true)
   countries           Country[]
   exchangeRateHistory ExchangeRate[]
   createdAt           DateTime       @default(now())
