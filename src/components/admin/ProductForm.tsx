@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import type { Product, Category, Brand, Tag, SizeGuide, Collection } from "@prisma/client";
 import { saveProduct } from "@/actions/admin/products";
 
@@ -26,10 +26,10 @@ export function ProductForm({
   baseCurrencyCode: string;
 }) {
   const [trackInventory, setTrackInventory] = useState(product?.trackInventory ?? true);
-  const action = saveProduct.bind(null, product?.id ?? null);
+  const [state, formAction, isPending] = useActionState(saveProduct.bind(null, product?.id ?? null), null);
 
   return (
-    <form action={action} className="space-y-10">
+    <form action={formAction} className="space-y-10">
       <section className="border border-stone bg-ivory p-6">
         <h2 className="mb-4 font-display text-lg">General</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -213,8 +213,9 @@ export function ProductForm({
         </div>
       </section>
 
-      <button type="submit" className="btn-primary">
-        Save Product
+      {state?.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
+      <button type="submit" className="btn-primary" disabled={isPending}>
+        {isPending ? "Saving…" : "Save Product"}
       </button>
     </form>
   );

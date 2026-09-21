@@ -39,62 +39,69 @@ const productSchema = z.object({
   collectionIds: z.array(z.string()).optional(),
 });
 
-export async function saveProduct(id: string | null, formData: FormData) {
+export async function saveProduct(id: string | null, _prevState: { error?: string } | null, formData: FormData): Promise<{ error?: string }> {
   await requireAdminAction("products", id ? "edit" : "create");
-  const raw = Object.fromEntries(formData.entries());
-  const tagIds = formData.getAll("tagIds").map(String);
-  const collectionIds = formData.getAll("collectionIds").map(String);
-  const parsed = productSchema.parse({ ...raw, tagIds, collectionIds });
 
-  const data = {
-    name: parsed.name,
-    slug: parsed.slug?.trim() ? slugify(parsed.slug) : slugify(parsed.name),
-    sku: parsed.sku,
-    brandId: parsed.brandId || null,
-    categoryId: parsed.categoryId || null,
-    sizeGuideId: parsed.sizeGuideId || null,
-    productType: parsed.productType || null,
-    shortDescription: parsed.shortDescription || null,
-    description: parsed.description || null,
-    videoUrl: parsed.videoUrl || null,
-    price: parsed.price,
-    compareAtPrice: parsed.compareAtPrice ? Number(parsed.compareAtPrice) : null,
-    costPrice: parsed.costPrice ? Number(parsed.costPrice) : null,
-    taxRate: parsed.taxRate,
-    trackInventory: parsed.trackInventory ?? false,
-    inventoryQuantity: parsed.inventoryQuantity,
-    lowStockThreshold: parsed.lowStockThreshold,
-    weight: parsed.weight ? Number(parsed.weight) : null,
-    status: parsed.status,
-    isFeatured: parsed.isFeatured ?? false,
-    isBestSeller: parsed.isBestSeller ?? false,
-    isNewArrival: parsed.isNewArrival ?? false,
-    isSale: parsed.isSale ?? false,
-    badge: parsed.badge || null,
-    seoTitle: parsed.seoTitle || null,
-    seoDescription: parsed.seoDescription || null,
-    seoKeywords: parsed.seoKeywords || null,
-    publishedAt: parsed.status === "ACTIVE" ? new Date() : null,
-  };
+  let productId: string | null = id;
+  try {
+    const raw = Object.fromEntries(formData.entries());
+    const tagIds = formData.getAll("tagIds").map(String);
+    const collectionIds = formData.getAll("collectionIds").map(String);
+    const parsed = productSchema.parse({ ...raw, tagIds, collectionIds });
 
-  let productId = id;
-  if (id) {
-    await prisma.product.update({ where: { id }, data });
-  } else {
-    const created = await prisma.product.create({ data });
-    productId = created.id;
-  }
+    const data = {
+      name: parsed.name,
+      slug: parsed.slug?.trim() ? slugify(parsed.slug) : slugify(parsed.name),
+      sku: parsed.sku,
+      brandId: parsed.brandId || null,
+      categoryId: parsed.categoryId || null,
+      sizeGuideId: parsed.sizeGuideId || null,
+      productType: parsed.productType || null,
+      shortDescription: parsed.shortDescription || null,
+      description: parsed.description || null,
+      videoUrl: parsed.videoUrl || null,
+      price: parsed.price,
+      compareAtPrice: parsed.compareAtPrice ? Number(parsed.compareAtPrice) : null,
+      costPrice: parsed.costPrice ? Number(parsed.costPrice) : null,
+      taxRate: parsed.taxRate,
+      trackInventory: parsed.trackInventory ?? false,
+      inventoryQuantity: parsed.inventoryQuantity,
+      lowStockThreshold: parsed.lowStockThreshold,
+      weight: parsed.weight ? Number(parsed.weight) : null,
+      status: parsed.status,
+      isFeatured: parsed.isFeatured ?? false,
+      isBestSeller: parsed.isBestSeller ?? false,
+      isNewArrival: parsed.isNewArrival ?? false,
+      isSale: parsed.isSale ?? false,
+      badge: parsed.badge || null,
+      seoTitle: parsed.seoTitle || null,
+      seoDescription: parsed.seoDescription || null,
+      seoKeywords: parsed.seoKeywords || null,
+      publishedAt: parsed.status === "ACTIVE" ? new Date() : null,
+    };
 
-  await prisma.productTag.deleteMany({ where: { productId: productId! } });
-  if (parsed.tagIds && parsed.tagIds.length > 0) {
-    await prisma.productTag.createMany({ data: parsed.tagIds.map((tagId) => ({ productId: productId!, tagId })) });
-  }
+    if (id) {
+      await prisma.product.update({ where: { id }, data });
+    } else {
+      const created = await prisma.product.create({ data });
+      productId = created.id;
+    }
 
-  await prisma.collectionProduct.deleteMany({ where: { productId: productId! } });
-  if (parsed.collectionIds && parsed.collectionIds.length > 0) {
-    await prisma.collectionProduct.createMany({
-      data: parsed.collectionIds.map((collectionId, i) => ({ collectionId, productId: productId!, sortOrder: i })),
-    });
+    await prisma.productTag.deleteMany({ where: { productId } });
+    if (parsed.tagIds && parsed.tagIds.length > 0) {
+      await prisma.productTag.createMany({ data: parsed.tagIds.map((tagId) => ({ productId: productId!, tagId })) });
+    }
+
+    await prisma.collectionProduct.deleteMany({ where: { productId } });
+    if (parsed.collectionIds && parsed.collectionIds.length > 0) {
+      await prisma.collectionProduct.createMany({
+        data: parsed.collectionIds.map((collectionId, i) => ({ collectionId, productId: productId!, sortOrder: i })),
+      });
+    }
+  } catch (error) {
+    // Surfaced to the form instead of thrown — an uncaught error here would otherwise
+    // crash the whole page with a production error digest that hides the real cause.
+    return { error: error instanceof Error ? error.message : "Could not save the product." };
   }
 
   revalidatePath("/admin/products");
