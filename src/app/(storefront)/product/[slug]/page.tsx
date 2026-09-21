@@ -25,7 +25,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     openGraph: {
       title: product.seoTitle ?? product.name,
       description: product.seoDescription ?? product.shortDescription ?? undefined,
-      images: product.primaryImage ? [product.primaryImage] : undefined,
+      // og:image must be a real fetchable URL — social crawlers can't load data: URIs,
+      // which is what an uploaded (as opposed to pasted-in) image now is (see
+      // src/lib/storage.ts).
+      images: product.primaryImage && !product.primaryImage.startsWith("data:") ? [product.primaryImage] : undefined,
     },
   };
 }

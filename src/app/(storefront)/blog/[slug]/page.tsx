@@ -13,7 +13,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   return {
     title: post.seoTitle ?? post.title,
     description: post.seoDescription ?? post.excerpt ?? undefined,
-    openGraph: { images: post.featuredImage ? [post.featuredImage] : undefined },
+    // og:image must be a real fetchable URL — social crawlers can't load data: URIs, which
+    // is what an uploaded (as opposed to pasted-in) image now is (see src/lib/storage.ts).
+    openGraph: { images: post.featuredImage && !post.featuredImage.startsWith("data:") ? [post.featuredImage] : undefined },
   };
 }
 

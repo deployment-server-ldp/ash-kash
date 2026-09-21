@@ -423,7 +423,7 @@ model ProductImage {
   id        String   @id @default(cuid())
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  url       String
+  url       String   @db.LongText
   altText   String?
   isPrimary Boolean  @default(false)
   colorId   String? // variant-specific images (e.g. "black dress" images)
@@ -834,8 +834,8 @@ model SliderItem {
   title          String?
   subtitle       String?
   description    String?   @db.Text
-  desktopImage   String
-  mobileImage    String?
+  desktopImage   String    @db.LongText
+  mobileImage    String?   @db.LongText
   buttonText     String?
   buttonUrl      String?
   textAlign      TextAlign @default(LEFT)
@@ -913,7 +913,7 @@ model BlogPost {
   slug           String        @unique
   excerpt        String?       @db.VarChar(500)
   content        String        @db.LongText
-  featuredImage  String?
+  featuredImage  String?       @db.LongText
   tags           BlogPostTag[]
   seoTitle       String?
   seoDescription String?       @db.VarChar(500)
@@ -969,8 +969,8 @@ model StoreSetting {
   maintenanceMode        Boolean  @default(true)
   maintenanceMessage     String?  @db.Text
   storeName              String   @default("Ash & Kash")
-  logoUrl                String?  @db.Text
-  faviconUrl             String?  @db.Text
+  logoUrl                String?  @db.LongText
+  faviconUrl             String?  @db.LongText
   brandColor             String   @default("#a97a3b")
   contactEmail           String?
   contactPhone           String?
@@ -990,7 +990,7 @@ model StoreSetting {
   seoDefaultTitle        String?
   seoDefaultDescription  String?  @db.VarChar(500)
   seoDefaultKeywords     String?
-  seoDefaultOgImage      String?
+  seoDefaultOgImage      String?  @db.LongText
   newsletterProvider     String   @default("none")
   newsletterApiKey       String?
   updatedAt              DateTime @updatedAt

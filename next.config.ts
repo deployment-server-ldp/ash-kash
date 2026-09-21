@@ -2,10 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    // Logo/favicon are embedded as base64 data URLs (see ImageUploadField storeInline),
-    // which inflates their size by ~33% — the default 1mb Server Action body limit is too
-    // tight once both fields plus the rest of the settings form are submitted together.
-    serverActions: { bodySizeLimit: "4mb" },
+    // Uploaded images (product photos, slider images, logo/favicon, etc.) are embedded as
+    // base64 data URLs (see src/lib/storage.ts) rather than written to disk, which inflates
+    // their size by ~33% — and some forms (e.g. a homepage slide) submit two images at
+    // once. The default 1mb Server Action body limit is far too tight for that.
+    serverActions: { bodySizeLimit: "8mb" },
   },
   images: {
     remotePatterns: [

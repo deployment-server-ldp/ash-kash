@@ -51,8 +51,8 @@ export default async function AdminSettingsPage() {
             <label className="label">Store Name</label>
             <input name="storeName" defaultValue={settings.storeName} required className="input" />
           </div>
-          <ImageUploadField name="logoUrl" defaultValue={settings.logoUrl} label="Logo" storeInline />
-          <ImageUploadField name="faviconUrl" defaultValue={settings.faviconUrl} label="Favicon (use a square image, e.g. 64x64px)" storeInline />
+          <ImageUploadField name="logoUrl" defaultValue={settings.logoUrl} label="Logo" />
+          <ImageUploadField name="faviconUrl" defaultValue={settings.faviconUrl} label="Favicon (use a square image, e.g. 64x64px)" />
           <div>
             <label className="label">Brand Color</label>
             <input type="color" name="brandColor" defaultValue={settings.brandColor} className="h-10 w-16 border border-stone" />
