@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession, isAdminRole } from "@/lib/auth/session";
 import { saveUploadedFile } from "@/lib/storage";
 
-// The "db" backend embeds the file directly in the database, so it stays capped small.
-// Real object storage (cloudinary/s3) has nowhere near that constraint — Cloudinary's own
-// free-tier limit is 10MB per image, so match that.
-const MAX_SIZE = (process.env.IMAGE_STORAGE ?? "db") === "db" ? 2 * 1024 * 1024 : 10 * 1024 * 1024;
+// Images are embedded directly in the database (see src/lib/storage.ts) rather than
+// written to disk, so this cap keeps individual rows/pages reasonably sized.
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
 
 export async function POST(request: NextRequest) {
@@ -23,8 +22,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unsupported file type." }, { status: 400 });
   }
   if (file.size > MAX_SIZE) {
-    const maxLabel = MAX_SIZE >= 10 * 1024 * 1024 ? "10MB" : "2MB";
-    return NextResponse.json({ error: `File is too large (max ${maxLabel}). Please compress the image first.` }, { status: 400 });
+    return NextResponse.json({ error: "File is too large (max 2MB). Please compress the image first." }, { status: 400 });
   }
 
   try {
