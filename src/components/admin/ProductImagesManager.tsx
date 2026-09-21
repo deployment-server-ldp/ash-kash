@@ -10,6 +10,7 @@ import { addProductImage, deleteProductImage, reorderProductImage, setPrimaryIma
 export function ProductImagesManager({ productId, images }: { productId: string; images: ProductImage[] }) {
   const [url, setUrl] = useState("");
   const [altText, setAltText] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   return (
@@ -60,8 +61,13 @@ export function ProductImagesManager({ productId, images }: { productId: string;
           type="button"
           disabled={pending || !url}
           onClick={() => {
+            setError(null);
             startTransition(async () => {
-              await addProductImage(productId, url, altText);
+              const result = await addProductImage(productId, url, altText);
+              if (result.error) {
+                setError(result.error);
+                return;
+              }
               setAltText("");
               setUrl("");
             });
@@ -70,6 +76,7 @@ export function ProductImagesManager({ productId, images }: { productId: string;
         >
           Add Image
         </button>
+        {error ? <p className="text-xs text-red-600">{error}</p> : null}
       </div>
     </div>
   );

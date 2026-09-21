@@ -108,14 +108,21 @@ export async function deleteProduct(id: string) {
   revalidatePath("/admin/products");
 }
 
-export async function addProductImage(productId: string, url: string, altText: string) {
+export async function addProductImage(productId: string, url: string, altText: string): Promise<{ error?: string }> {
   await requireAdminAction("products", "edit");
-  const count = await prisma.productImage.count({ where: { productId } });
-  await prisma.productImage.create({
-    data: { productId, url, altText: altText || null, position: count, isPrimary: count === 0 },
-  });
-  revalidatePath(`/admin/products/${productId}`);
-  revalidatePath("/", "layout");
+  try {
+    const count = await prisma.productImage.count({ where: { productId } });
+    await prisma.productImage.create({
+      data: { productId, url, altText: altText || null, position: count, isPrimary: count === 0 },
+    });
+    revalidatePath(`/admin/products/${productId}`);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (error) {
+    // Surfaced to the admin UI instead of thrown — an uncaught error here would otherwise
+    // crash the whole page with a production error digest that hides the real cause.
+    return { error: error instanceof Error ? error.message : "Could not add the image." };
+  }
 }
 
 export async function deleteProductImage(imageId: string, productId: string) {
