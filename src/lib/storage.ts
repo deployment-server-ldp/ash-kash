@@ -96,7 +96,7 @@ async function uploadToS3(file: File): Promise<string> {
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`IMAGE_STORAGE=s3 requires ${name} to be set. See .env.example for setup steps.`);
+    throw new Error(`${name} is not set. See .env.example for setup steps.`);
   }
   return value;
 }
