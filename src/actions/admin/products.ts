@@ -87,12 +87,12 @@ export async function saveProduct(id: string | null, _prevState: { error?: strin
       productId = created.id;
     }
 
-    await prisma.productTag.deleteMany({ where: { productId } });
+    await prisma.productTag.deleteMany({ where: { productId: productId! } });
     if (parsed.tagIds && parsed.tagIds.length > 0) {
       await prisma.productTag.createMany({ data: parsed.tagIds.map((tagId) => ({ productId: productId!, tagId })) });
     }
 
-    await prisma.collectionProduct.deleteMany({ where: { productId } });
+    await prisma.collectionProduct.deleteMany({ where: { productId: productId! } });
     if (parsed.collectionIds && parsed.collectionIds.length > 0) {
       await prisma.collectionProduct.createMany({
         data: parsed.collectionIds.map((collectionId, i) => ({ collectionId, productId: productId!, sortOrder: i })),
