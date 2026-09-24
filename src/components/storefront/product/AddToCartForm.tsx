@@ -22,6 +22,27 @@ export function AddToCartForm({ product }: { product: ProductDetailVM }) {
     return [...map.entries()];
   }, [product.variants]);
 
+  // Which sizes exist for a given color, and which colors exist for a given size — lets the
+  // UI cross out combinations that aren't offered, in either selection order.
+  const sizesByColor = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const v of product.variants) {
+      if (!v.colorId || !v.sizeId) continue;
+      if (!map.has(v.colorId)) map.set(v.colorId, new Set());
+      map.get(v.colorId)!.add(v.sizeId);
+    }
+    return map;
+  }, [product.variants]);
+  const colorsBySize = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const v of product.variants) {
+      if (!v.colorId || !v.sizeId) continue;
+      if (!map.has(v.sizeId)) map.set(v.sizeId, new Set());
+      map.get(v.sizeId)!.add(v.colorId);
+    }
+    return map;
+  }, [product.variants]);
+
   const [sizeId, setSizeId] = useState<string | null>(null);
   const [colorId, setColorId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -85,17 +106,24 @@ export function AddToCartForm({ product }: { product: ProductDetailVM }) {
       {colors.length > 0 ? (
         <div>
           <p className="mb-2 text-xs uppercase tracking-wide2 text-noir/60">Color</p>
-          <div className="flex gap-2">
-            {colors.map(([id, c]) => (
-              <button
-                key={id}
-                onClick={() => setColorId(id)}
-                title={c.name}
-                className={`h-9 w-9 rounded-full border-2 ${colorId === id ? "border-noir" : "border-transparent"}`}
-              >
-                <span className="block h-full w-full rounded-full border border-stone" style={{ backgroundColor: c.hex ?? "#ccc" }} />
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-2">
+            {colors.map(([id, c]) => {
+              const unavailable = sizeId ? !colorsBySize.get(sizeId)?.has(id) : false;
+              return (
+                <button
+                  key={id}
+                  onClick={() => !unavailable && setColorId(id)}
+                  disabled={unavailable}
+                  title={unavailable ? `${c.name} — not available in this size` : c.name}
+                  className={`relative h-9 w-9 rounded-full border-2 ${colorId === id ? "border-noir" : "border-transparent"} ${unavailable ? "cursor-not-allowed opacity-40" : ""}`}
+                >
+                  <span className="block h-full w-full rounded-full border border-stone" style={{ backgroundColor: c.hex ?? "#ccc" }} />
+                  {unavailable ? (
+                    <span className="pointer-events-none absolute left-1/2 top-1/2 h-px w-11 -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-red-500" />
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -107,15 +135,25 @@ export function AddToCartForm({ product }: { product: ProductDetailVM }) {
             {product.sizeGuide ? <SizeGuideModal sizeGuide={product.sizeGuide} /> : null}
           </div>
           <div className="flex flex-wrap gap-2">
-            {sizes.map(([id, name]) => (
-              <button
-                key={id}
-                onClick={() => setSizeId(id)}
-                className={`border px-4 py-2 text-sm ${sizeId === id ? "border-noir bg-noir text-ivory" : "border-stone hover:border-noir"}`}
-              >
-                {name}
-              </button>
-            ))}
+            {sizes.map(([id, name]) => {
+              const unavailable = colorId ? !sizesByColor.get(colorId)?.has(id) : false;
+              return (
+                <button
+                  key={id}
+                  onClick={() => !unavailable && setSizeId(id)}
+                  disabled={unavailable}
+                  title={unavailable ? `${name} — not available in this color` : name}
+                  className={`relative border px-4 py-2 text-sm ${
+                    sizeId === id ? "border-noir bg-noir text-ivory" : "border-stone hover:border-noir"
+                  } ${unavailable ? "cursor-not-allowed text-noir/30 hover:border-stone" : ""}`}
+                >
+                  {name}
+                  {unavailable ? (
+                    <span className="pointer-events-none absolute left-1/2 top-1/2 h-px w-full -translate-x-1/2 -translate-y-1/2 -rotate-12 bg-red-500" />
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
         </div>
       ) : null}

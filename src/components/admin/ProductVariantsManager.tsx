@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { ProductVariant, Size, Color } from "@prisma/client";
-import { deleteVariant, saveVariant } from "@/actions/admin/products";
+import { addVariantsForColor, deleteVariant, saveVariant } from "@/actions/admin/products";
 import { DeleteButton } from "./DeleteButton";
 
 type VariantWithRefs = ProductVariant & { size: Size | null; color: Color | null };
@@ -19,6 +19,7 @@ export function ProductVariantsManager({
   colors: Color[];
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
 
   return (
     <div>
@@ -43,7 +44,17 @@ export function ProductVariantsManager({
           </table>
         </div>
       ) : (
-        <p className="text-sm text-noir/50">No variants yet. Add one below, or leave empty for a single-SKU product.</p>
+        <p className="text-sm text-noir/50">No variants yet. Add some below, or leave empty for a single-SKU product.</p>
+      )}
+
+      {showBulkForm ? (
+        <div className="mt-4 border border-stone p-4">
+          <BulkColorSizeForm productId={productId} sizes={sizes} colors={colors} onDone={() => setShowBulkForm(false)} />
+        </div>
+      ) : (
+        <button onClick={() => setShowBulkForm(true)} className="btn-primary mt-4">
+          Add Sizes for a Color
+        </button>
       )}
 
       {showForm ? (
@@ -52,10 +63,88 @@ export function ProductVariantsManager({
         </div>
       ) : (
         <button onClick={() => setShowForm(true)} className="btn-outline mt-4">
-          Add Variant
+          Add Single Variant
         </button>
       )}
     </div>
+  );
+}
+
+/** Pick one color, tick every size it comes in, and create all those variants in one go —
+ * instead of adding each size/color combination one at a time. */
+function BulkColorSizeForm({
+  productId,
+  sizes,
+  colors,
+  onDone,
+}: {
+  productId: string;
+  sizes: Size[];
+  colors: Color[];
+  onDone: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        setError(null);
+        startTransition(async () => {
+          const result = await addVariantsForColor(productId, formData);
+          if (result.error) {
+            setError(result.error);
+            return;
+          }
+          onDone();
+        });
+      }}
+      className="space-y-4"
+    >
+      <div className="max-w-xs">
+        <label className="label">Color</label>
+        <select name="colorId" required className="input">
+          <option value="">— Select color —</option>
+          {colors.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="label">Sizes available in this color</label>
+        <div className="flex flex-wrap gap-3">
+          {sizes.map((s) => (
+            <label key={s.id} className="flex items-center gap-1.5 border border-stone px-3 py-1.5 text-sm">
+              <input type="checkbox" name="sizeIds" value={s.id} className="accent-clay-600" />
+              {s.name}
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
+        <div>
+          <label className="label">Stock (each size)</label>
+          <input type="number" name="inventoryQuantity" defaultValue={0} className="input" />
+        </div>
+        <div>
+          <label className="label">Price override (optional)</label>
+          <input type="number" step="0.01" name="price" className="input" />
+        </div>
+      </div>
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      <div className="flex gap-2">
+        <button type="submit" disabled={pending} className="btn-primary">
+          {pending ? "Adding…" : "Add Variants"}
+        </button>
+        <button type="button" onClick={onDone} className="btn-ghost">
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 

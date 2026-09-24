@@ -10,7 +10,7 @@ import { WishlistButton } from "@/components/storefront/WishlistButton";
 import { ReviewsSection } from "@/components/storefront/product/ReviewsSection";
 import { RecentlyViewed } from "@/components/storefront/product/RecentlyViewed";
 import { ProductAccordion } from "@/components/storefront/product/ProductAccordion";
-import { SizeGuideSection } from "@/components/storefront/product/SizeGuideSection";
+import { SizeGuideContent } from "@/components/storefront/product/SizeGuideContent";
 import { LiveVisitorCounter } from "@/components/storefront/product/LiveVisitorCounter";
 import { TrustBadgesList } from "@/components/storefront/product/TrustBadgesList";
 import { ProductGridSection } from "@/components/storefront/sections/ProductGridSection";
@@ -128,12 +128,13 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
                   settings.freeShippingNote ??
                   "Cash on Delivery available. Standard delivery within 3-7 business days. See our return policy for details.",
               },
+              ...(product.sizeGuide
+                ? [{ title: "Size Guide", content: <SizeGuideContent sizeGuide={product.sizeGuide} /> }]
+                : []),
             ]}
           />
         </div>
       </div>
-
-      {product.sizeGuide ? <SizeGuideSection sizeGuide={product.sizeGuide} /> : null}
 
       <div className="mt-20 border-t border-stone pt-12">
         <h2 className="mb-8 font-display text-2xl">Reviews</h2>

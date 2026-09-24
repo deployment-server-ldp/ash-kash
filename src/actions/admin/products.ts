@@ -237,6 +237,60 @@ export async function deleteVariant(variantId: string, productId: string) {
   revalidatePath(`/admin/products/${productId}`);
 }
 
+function skuSegment(s: string): string {
+  return s.trim().toUpperCase().replace(/[^A-Z0-9]+/g, "");
+}
+
+/** Creates one variant per checked size, all for a single color, in one submit — instead
+ * of adding each size/color combination one at a time. */
+export async function addVariantsForColor(productId: string, formData: FormData): Promise<{ error?: string; created?: number }> {
+  await requireAdminAction("products", "edit");
+  try {
+    const sizeIds = formData.getAll("sizeIds").map(String);
+    const colorId = String(formData.get("colorId") ?? "");
+    const inventoryQuantity = Number(formData.get("inventoryQuantity") ?? 0) || 0;
+    const priceRaw = String(formData.get("price") ?? "");
+
+    if (!colorId) return { error: "Select a color." };
+    if (sizeIds.length === 0) return { error: "Select at least one size." };
+
+    const [product, color, sizes, existing] = await Promise.all([
+      prisma.product.findUniqueOrThrow({ where: { id: productId } }),
+      prisma.color.findUniqueOrThrow({ where: { id: colorId } }),
+      prisma.size.findMany({ where: { id: { in: sizeIds } } }),
+      prisma.productVariant.findMany({ where: { productId, colorId }, select: { sizeId: true } }),
+    ]);
+
+    const existingSizeIds = new Set(existing.map((v) => v.sizeId));
+    const newSizes = sizes.filter((s) => !existingSizeIds.has(s.id));
+    if (newSizes.length === 0) {
+      return { error: "All selected sizes already exist for this color." };
+    }
+
+    const count = await prisma.productVariant.count({ where: { productId } });
+
+    await prisma.productVariant.createMany({
+      data: newSizes.map((size, i) => ({
+        productId,
+        sizeId: size.id,
+        colorId,
+        sku: `${skuSegment(product.sku)}-${skuSegment(color.name)}-${skuSegment(size.name)}`,
+        title: `${size.name} / ${color.name}`,
+        price: priceRaw ? Number(priceRaw) : null,
+        inventoryQuantity,
+        position: count + i,
+        isActive: true,
+      })),
+    });
+
+    revalidatePath(`/admin/products/${productId}`);
+    revalidatePath("/", "layout");
+    return { created: newSizes.length };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not add variants." };
+  }
+}
+
 export async function quickCreateBrand(name: string) {
   await requireAdminAction("products", "create");
   return prisma.brand.create({ data: { name, slug: slugify(name) } });

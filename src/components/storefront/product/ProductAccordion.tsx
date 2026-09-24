@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
-export function ProductAccordion({ items }: { items: { title: string; content: string }[] }) {
+export function ProductAccordion({ items }: { items: { title: string; content: React.ReactNode }[] }) {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
