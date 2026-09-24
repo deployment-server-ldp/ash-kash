@@ -96,6 +96,22 @@ export async function updateCheckoutSettings(formData: FormData) {
   revalidatePath("/admin/settings");
 }
 
+const trustBadgesSchema = z.object({
+  productTrustBadges: z.string().optional(),
+});
+
+export async function updateProductTrustBadges(formData: FormData) {
+  await requireAdminAction("settings", "edit");
+  await ensureSettingsRow();
+  const parsed = trustBadgesSchema.parse(Object.fromEntries(formData.entries()));
+  await prisma.storeSetting.update({
+    where: { id: 1 },
+    data: { productTrustBadges: parsed.productTrustBadges || null },
+  });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+}
+
 const newsletterSchema = z.object({
   newsletterProvider: z.enum(["none", "mailchimp", "klaviyo", "brevo"]),
   newsletterApiKey: z.string().optional(),

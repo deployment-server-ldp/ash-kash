@@ -5,10 +5,16 @@ import type { HomepageSection } from "@prisma/client";
 const PLACEHOLDER = "/images/placeholder-product.svg";
 
 export function BrandStory({ section }: { section: HomepageSection }) {
+  // A URL with no button text means the image itself should be clickable.
+  const imageClickable = Boolean(section.buttonUrl && !section.buttonText);
+
   return (
     <section className="container-boutique grid grid-cols-1 items-center gap-10 py-16 sm:py-24 lg:grid-cols-2">
       <div className="relative aspect-[4/5]">
         <Image src={section.imageUrl ?? PLACEHOLDER} alt={section.title ?? ""} fill className="object-cover" />
+        {imageClickable ? (
+          <Link href={section.buttonUrl!} className="absolute inset-0" aria-label={section.title ?? "View more"} />
+        ) : null}
       </div>
       <div>
         {section.subtitle ? <p className="eyebrow mb-3">{section.subtitle}</p> : null}

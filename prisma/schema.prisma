@@ -993,6 +993,8 @@ model StoreSetting {
   seoDefaultOgImage      String?  @db.LongText
   newsletterProvider     String   @default("none")
   newsletterApiKey       String?
+  // One trust-badge line per line (e.g. "Delivering Worldwide"), shown on every product page.
+  productTrustBadges     String?  @db.Text
   updatedAt              DateTime @updatedAt
 }
 

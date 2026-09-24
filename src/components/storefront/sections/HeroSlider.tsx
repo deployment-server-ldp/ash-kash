@@ -47,11 +47,15 @@ export function HeroSlider({ slides }: { slides: SliderItem[] }) {
             {slide.subtitle ? <p className="max-w-md text-lg text-ivory/90">{slide.subtitle}</p> : null}
             {slide.description ? <p className="max-w-md text-sm text-ivory/70">{slide.description}</p> : null}
             {slide.buttonText && slide.buttonUrl ? (
-              <Link href={slide.buttonUrl} className="btn bg-ivory text-noir hover:bg-clay-200 mt-2">
+              <Link href={slide.buttonUrl} className="btn relative z-30 bg-ivory text-noir hover:bg-clay-200 mt-2">
                 {slide.buttonText}
               </Link>
             ) : null}
           </div>
+          {/* A URL with no button text means the whole slide is clickable. */}
+          {slide.buttonUrl && !slide.buttonText ? (
+            <Link href={slide.buttonUrl} className="absolute inset-0 z-20" aria-label={slide.title ?? "View more"} />
+          ) : null}
         </div>
       ))}
 

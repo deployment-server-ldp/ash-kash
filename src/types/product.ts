@@ -66,6 +66,7 @@ export type ProductDetailVM = ProductCardVM & {
     title: string;
     unit: string;
     instructions: string | null;
+    imageUrl: string | null;
     rows: { id: string; sizeName: string; measurements: Record<string, string> }[];
   } | null;
 };

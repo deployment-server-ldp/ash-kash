@@ -41,7 +41,12 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-3xl">Orders</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="font-display text-3xl">Orders</h1>
+        <Link href="/api/admin/export/orders" className="btn-outline">
+          Export CSV
+        </Link>
+      </div>
 
       <form method="get" className="mb-4 flex flex-wrap gap-3">
         <input name="q" defaultValue={sp.q} placeholder="Search order #, name, phone" className="input max-w-sm" />

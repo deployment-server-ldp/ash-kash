@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
 import { DeleteButton } from "@/components/admin/DeleteButton";
@@ -116,8 +117,15 @@ export default async function ProductAttributesPage() {
           <ul className="mb-4 space-y-2">
             {sizeGuides.map((g) => (
               <li key={g.id} className="flex items-center justify-between text-sm">
-                {g.title} ({g._count.rows} sizes)
-                <DeleteButton action={deleteSizeGuide.bind(null, g.id)} />
+                <span>
+                  {g.title} ({g._count.rows} sizes){g.imageUrl ? " · has image" : ""}
+                </span>
+                <span className="flex items-center gap-3">
+                  <Link href={`/admin/products/attributes/size-guides/${g.id}`} className="underline">
+                    Edit
+                  </Link>
+                  <DeleteButton action={deleteSizeGuide.bind(null, g.id)} />
+                </span>
               </li>
             ))}
           </ul>

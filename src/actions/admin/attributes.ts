@@ -65,6 +65,7 @@ const sizeGuideSchema = z.object({
   title: z.string().min(1),
   unit: z.enum(["in", "cm"]),
   instructions: z.string().optional(),
+  imageUrl: z.string().optional(),
   sizeNames: z.array(z.string()),
   measurementKeys: z.array(z.string()),
 });
@@ -83,22 +84,25 @@ export async function createSizeGuide(formData: FormData) {
     title: formData.get("title"),
     unit: formData.get("unit"),
     instructions: formData.get("instructions") ?? undefined,
+    imageUrl: formData.get("imageUrl") ?? undefined,
     sizeNames,
     measurementKeys,
   });
 
   const guide = await prisma.sizeGuide.create({
-    data: { title: parsed.title, unit: parsed.unit, instructions: parsed.instructions || null },
+    data: { title: parsed.title, unit: parsed.unit, instructions: parsed.instructions || null, imageUrl: parsed.imageUrl || null },
   });
 
-  await prisma.sizeGuideRow.createMany({
-    data: parsed.sizeNames.map((sizeName, i) => ({
-      sizeGuideId: guide.id,
-      sizeName,
-      position: i,
-      measurements: Object.fromEntries(parsed.measurementKeys.map((k) => [k, ""])),
-    })),
-  });
+  if (parsed.sizeNames.length > 0) {
+    await prisma.sizeGuideRow.createMany({
+      data: parsed.sizeNames.map((sizeName, i) => ({
+        sizeGuideId: guide.id,
+        sizeName,
+        position: i,
+        measurements: Object.fromEntries(parsed.measurementKeys.map((k) => [k, ""])),
+      })),
+    });
+  }
 
   revalidatePath("/admin/products/attributes");
 }
@@ -107,4 +111,46 @@ export async function deleteSizeGuide(id: string) {
   await requireAdminAction("products", "delete");
   await prisma.sizeGuide.delete({ where: { id } });
   revalidatePath("/admin/products/attributes");
+}
+
+const sizeGuideDetailsSchema = z.object({
+  title: z.string().min(1),
+  unit: z.enum(["in", "cm"]),
+  instructions: z.string().optional(),
+  imageUrl: z.string().optional(),
+});
+
+export async function updateSizeGuideDetails(id: string, formData: FormData) {
+  await requireAdminAction("products", "edit");
+  const parsed = sizeGuideDetailsSchema.parse(Object.fromEntries(formData.entries()));
+  await prisma.sizeGuide.update({
+    where: { id },
+    data: {
+      title: parsed.title,
+      unit: parsed.unit,
+      instructions: parsed.instructions || null,
+      imageUrl: parsed.imageUrl || null,
+    },
+  });
+  revalidatePath(`/admin/products/attributes/size-guides/${id}`);
+  revalidatePath("/", "layout");
+}
+
+/** Saves the measurement values entered for every row of a size guide in one submit. */
+export async function updateSizeGuideRows(guideId: string, formData: FormData) {
+  await requireAdminAction("products", "edit");
+  const rows = await prisma.sizeGuideRow.findMany({ where: { sizeGuideId: guideId } });
+
+  await prisma.$transaction(
+    rows.map((row) => {
+      const measurements = row.measurements as Record<string, string>;
+      const updated = Object.fromEntries(
+        Object.keys(measurements).map((key) => [key, String(formData.get(`row_${row.id}_${key}`) ?? "")])
+      );
+      return prisma.sizeGuideRow.update({ where: { id: row.id }, data: { measurements: updated } });
+    })
+  );
+
+  revalidatePath(`/admin/products/attributes/size-guides/${guideId}`);
+  revalidatePath("/", "layout");
 }

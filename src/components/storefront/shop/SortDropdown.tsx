@@ -3,18 +3,18 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 const OPTIONS: { value: string; label: string }[] = [
-  { value: "featured", label: "Featured" },
+  { value: "price_high", label: "Price: High to Low" },
+  { value: "price_low", label: "Price: Low to High" },
   { value: "newest", label: "Newest" },
   { value: "best_selling", label: "Best Selling" },
-  { value: "price_low", label: "Price: Low to High" },
-  { value: "price_high", label: "Price: High to Low" },
+  { value: "featured", label: "Featured" },
 ];
 
 export function SortDropdown() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const current = searchParams.get("sort") ?? "featured";
+  const current = searchParams.get("sort") ?? "price_high";
 
   return (
     <select

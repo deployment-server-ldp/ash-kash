@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
 import { ReviewRowActions } from "@/components/admin/ReviewRowActions";
+import { AddReviewForm } from "@/components/admin/AddReviewForm";
 
 export const metadata: Metadata = { title: "Reviews" };
 
@@ -15,15 +16,21 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
   await requireAdmin("reviews");
   const { status } = await searchParams;
 
-  const reviews = await prisma.review.findMany({
-    where: status ? { status: status as "PENDING" | "APPROVED" | "REJECTED" } : {},
-    include: { product: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [reviews, products] = await Promise.all([
+    prisma.review.findMany({
+      where: status ? { status: status as "PENDING" | "APPROVED" | "REJECTED" } : {},
+      include: { product: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.product.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+  ]);
 
   return (
     <div>
       <h1 className="mb-6 font-display text-3xl">Reviews</h1>
+
+      <AddReviewForm products={products} />
+
       <div className="mb-4 flex gap-2 text-sm">
         {["", "PENDING", "APPROVED", "REJECTED"].map((s) => (
           <a key={s} href={s ? `?status=${s}` : "?"} className={`px-3 py-1.5 border border-stone ${status === s || (!status && !s) ? "bg-noir text-ivory" : ""}`}>

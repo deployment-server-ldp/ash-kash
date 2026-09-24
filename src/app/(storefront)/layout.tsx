@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import { Header, AnnouncementBar } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { CartUIProvider } from "@/components/storefront/CartUIProvider";
 import { CurrencyProvider } from "@/components/storefront/CurrencyProvider";
 import { CartDrawer } from "@/components/storefront/CartDrawer";
 import { MaintenancePage } from "@/components/storefront/MaintenancePage";
+import { PageTransitionIndicator } from "@/components/storefront/PageTransitionIndicator";
 import { getCartViewData } from "@/lib/cart-view";
 import { resolveCurrentCurrency } from "@/lib/currency/service";
 import { getStoreSettings } from "@/lib/data/settings";
@@ -25,6 +27,9 @@ export default async function StorefrontLayout({ children }: { children: React.R
   return (
     <CurrencyProvider currency={currency}>
       <CartUIProvider>
+        <Suspense fallback={null}>
+          <PageTransitionIndicator />
+        </Suspense>
         {settings.maintenanceMode ? (
           <div className="bg-noir py-1.5 text-center text-[11px] uppercase tracking-wide text-ivory">
             Maintenance mode is ON — visitors see the &quot;Under Development&quot; page. Only you can see the live site.

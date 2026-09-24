@@ -34,6 +34,7 @@ export const getStoreSettings = cache(async () => {
       seoDefaultOgImage: null,
       newsletterProvider: "none",
       newsletterApiKey: null,
+      productTrustBadges: "Delivering Worldwide\n14 days exchange refund policy\n6 to 7 days Delivery time",
       updatedAt: new Date(),
     }
   );

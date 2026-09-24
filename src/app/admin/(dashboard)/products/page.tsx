@@ -43,11 +43,16 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-3xl">Products</h1>
-        {can(session.role, "products", "create") ? (
-          <Link href="/admin/products/new" className="btn-primary">
-            Add Product
+        <div className="flex items-center gap-3">
+          <Link href="/api/admin/export/products" className="btn-outline">
+            Export CSV
           </Link>
-        ) : null}
+          {can(session.role, "products", "create") ? (
+            <Link href="/admin/products/new" className="btn-primary">
+              Add Product
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <form method="get" className="mb-4 flex gap-3">

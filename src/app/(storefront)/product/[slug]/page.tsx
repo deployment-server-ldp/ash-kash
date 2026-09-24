@@ -10,6 +10,9 @@ import { WishlistButton } from "@/components/storefront/WishlistButton";
 import { ReviewsSection } from "@/components/storefront/product/ReviewsSection";
 import { RecentlyViewed } from "@/components/storefront/product/RecentlyViewed";
 import { ProductAccordion } from "@/components/storefront/product/ProductAccordion";
+import { SizeGuideSection } from "@/components/storefront/product/SizeGuideSection";
+import { LiveVisitorCounter } from "@/components/storefront/product/LiveVisitorCounter";
+import { TrustBadgesList } from "@/components/storefront/product/TrustBadgesList";
 import { ProductGridSection } from "@/components/storefront/sections/ProductGridSection";
 import { getStoreSettings } from "@/lib/data/settings";
 
@@ -82,7 +85,7 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
-      <nav className="mb-6 text-xs text-noir/50">
+      <nav className="mb-6 text-sm text-noir/50">
         <Link href="/shop">Shop</Link>
         {product.categoryName ? (
           <>
@@ -108,6 +111,14 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
 
           <AddToCartForm product={product} />
 
+          <div className="mt-4">
+            <LiveVisitorCounter />
+          </div>
+
+          <div className="mt-4">
+            <TrustBadgesList badges={settings.productTrustBadges} />
+          </div>
+
           <ProductAccordion
             items={[
               { title: "Description", content: product.description ?? product.shortDescription ?? "" },
@@ -121,6 +132,8 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
           />
         </div>
       </div>
+
+      {product.sizeGuide ? <SizeGuideSection sizeGuide={product.sizeGuide} /> : null}
 
       <div className="mt-20 border-t border-stone pt-12">
         <h2 className="mb-8 font-display text-2xl">Reviews</h2>

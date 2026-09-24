@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { X } from "lucide-react";
 import type { ProductDetailVM } from "@/types/product";
+import { hasFilledMeasurements } from "@/lib/size-guide";
 
 export function SizeGuideModal({ sizeGuide }: { sizeGuide: NonNullable<ProductDetailVM["sizeGuide"]> }) {
   const [open, setOpen] = useState(false);
   const columns = sizeGuide.rows.length > 0 ? Object.keys(sizeGuide.rows[0]!.measurements) : [];
+  const showTable = hasFilledMeasurements(sizeGuide);
 
   return (
     <>
@@ -24,32 +27,39 @@ export function SizeGuideModal({ sizeGuide }: { sizeGuide: NonNullable<ProductDe
               </button>
             </div>
             {sizeGuide.instructions ? <p className="mb-4 text-sm text-noir/60">{sizeGuide.instructions}</p> : null}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-stone text-left">
-                    <th className="py-2 pr-4">Size</th>
-                    {columns.map((col) => (
-                      <th key={col} className="py-2 pr-4">
-                        {col} ({sizeGuide.unit})
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sizeGuide.rows.map((row) => (
-                    <tr key={row.id} className="border-b border-stone/50">
-                      <td className="py-2 pr-4 font-medium">{row.sizeName}</td>
+            {sizeGuide.imageUrl ? (
+              <div className="relative mb-4 h-auto w-full">
+                <Image src={sizeGuide.imageUrl} alt={sizeGuide.title} width={800} height={800} unoptimized className="h-auto w-full object-contain" />
+              </div>
+            ) : null}
+            {showTable ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-stone text-left">
+                      <th className="py-2 pr-4">Size</th>
                       {columns.map((col) => (
-                        <td key={col} className="py-2 pr-4">
-                          {row.measurements[col] ?? "—"}
-                        </td>
+                        <th key={col} className="py-2 pr-4">
+                          {col} ({sizeGuide.unit})
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {sizeGuide.rows.map((row) => (
+                      <tr key={row.id} className="border-b border-stone/50">
+                        <td className="py-2 pr-4 font-medium">{row.sizeName}</td>
+                        {columns.map((col) => (
+                          <td key={col} className="py-2 pr-4">
+                            {row.measurements[col] || "—"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

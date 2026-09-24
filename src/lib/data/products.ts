@@ -64,8 +64,10 @@ function sortToOrderBy(sort?: SortOption): Prisma.ProductOrderByWithRelationInpu
       return [{ isBestSeller: "desc" }, { reviewsCount: "desc" }];
     case "popular":
       return [{ reviewsCount: "desc" }];
-    default:
+    case "featured":
       return [{ isFeatured: "desc" }, { createdAt: "desc" }];
+    default:
+      return [{ price: "desc" }];
   }
 }
 
@@ -240,6 +242,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailVM | 
           title: p.sizeGuide.title,
           unit: p.sizeGuide.unit,
           instructions: p.sizeGuide.instructions,
+          imageUrl: p.sizeGuide.imageUrl,
           rows: p.sizeGuide.rows.map((r) => ({
             id: r.id,
             sizeName: r.sizeName,

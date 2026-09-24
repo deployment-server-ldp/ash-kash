@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { getStoreSettings } from "@/lib/data/settings";
 import { requireAdmin } from "@/lib/auth/guards";
-import { updateCheckoutSettings, updateGeneralSettings, updateMaintenanceMode, updateNewsletterSettings } from "@/actions/admin/settings";
+import {
+  updateCheckoutSettings,
+  updateGeneralSettings,
+  updateMaintenanceMode,
+  updateNewsletterSettings,
+  updateProductTrustBadges,
+} from "@/actions/admin/settings";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { prisma } from "@/lib/prisma";
 
@@ -136,6 +142,25 @@ export default async function AdminSettingsPage() {
             <label className="label">Default Tax Rate (%)</label>
             <input type="number" step="0.01" name="defaultTaxRate" defaultValue={settings.defaultTaxRate.toString()} className="input" />
           </div>
+          <button type="submit" className="btn-primary">
+            Save
+          </button>
+        </form>
+      </section>
+
+      <section className="max-w-2xl border border-stone bg-ivory p-6">
+        <h2 className="mb-4 font-display text-lg">Product Page Trust Badges</h2>
+        <p className="mb-4 text-sm text-noir/60">
+          One line each — shown as a bullet list on every product page (e.g. shipping/returns info).
+        </p>
+        <form action={updateProductTrustBadges} className="space-y-4">
+          <textarea
+            name="productTrustBadges"
+            defaultValue={settings.productTrustBadges ?? ""}
+            rows={5}
+            placeholder={"Delivering Worldwide\n14 days exchange refund policy\n6 to 7 days Delivery time"}
+            className="input"
+          />
           <button type="submit" className="btn-primary">
             Save
           </button>

@@ -47,7 +47,12 @@ export default async function AdminCustomersPage({ searchParams }: { searchParam
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-3xl">Customers</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="font-display text-3xl">Customers</h1>
+        <Link href="/api/admin/export/customers" className="btn-outline">
+          Export CSV
+        </Link>
+      </div>
       <form method="get" className="mb-4 flex gap-3">
         <input name="q" defaultValue={sp.q} placeholder="Search by name or email" className="input max-w-sm" />
         <button type="submit" className="btn-outline">
