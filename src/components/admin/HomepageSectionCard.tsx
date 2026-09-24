@@ -5,6 +5,7 @@ import type { HomepageSection, Product } from "@prisma/client";
 import { deleteHomepageSection, moveHomepageSection, toggleHomepageSection, updateHomepageSection } from "@/actions/admin/content";
 import { ReorderButtons } from "./ReorderButtons";
 import { DeleteButton } from "./DeleteButton";
+import { ImageUploadField } from "./ImageUploadField";
 
 const NEEDS_PRODUCT_SOURCE: string[] = ["FEATURED_PRODUCTS", "NEW_ARRIVALS", "BEST_SELLERS"];
 
@@ -69,9 +70,17 @@ export function HomepageSectionCard({
             <textarea name="content" defaultValue={section.content ?? ""} rows={2} className="input" />
           </div>
           <div>
-            <label className="label">Image URL</label>
-            <input name="imageUrl" defaultValue={section.imageUrl ?? ""} className="input" />
+            <ImageUploadField name="imageUrl" defaultValue={section.imageUrl} label="Image" />
           </div>
+          {section.type === "PROMO_BANNER" ? (
+            <div>
+              <ImageUploadField
+                name="imageUrl2"
+                defaultValue={section.imageUrl2}
+                label="Second Image (optional — set to show a 2-column grid of two square banners instead of one)"
+              />
+            </div>
+          ) : null}
           <div>
             <label className="label">Button Text</label>
             <input name="buttonText" defaultValue={section.buttonText ?? ""} className="input" />
@@ -79,6 +88,9 @@ export function HomepageSectionCard({
           <div>
             <label className="label">Button URL</label>
             <input name="buttonUrl" defaultValue={section.buttonUrl ?? ""} className="input" />
+            <p className="mt-1 text-[11px] text-noir/50">
+              If Button Text is left blank, the whole banner image becomes clickable to this URL instead.
+            </p>
           </div>
           {NEEDS_PRODUCT_SOURCE.includes(section.type) ? (
             <>

@@ -29,13 +29,17 @@ export async function savePage(id: string | null, formData: FormData) {
     seoKeywords: parsed.seoKeywords || null,
     isPublished: parsed.isPublished ?? false,
   };
+  let pageId = id;
   if (id) {
     await prisma.page.update({ where: { id }, data });
   } else {
-    await prisma.page.create({ data });
+    const created = await prisma.page.create({ data });
+    pageId = created.id;
   }
   revalidatePath("/admin/pages");
-  redirect("/admin/pages");
+  // New pages land back on their own edit screen so the section builder is one click away;
+  // editing an existing one goes back to the list (matches the pre-existing behavior there).
+  redirect(id ? "/admin/pages" : `/admin/pages/${pageId}`);
 }
 
 export async function deletePage(id: string) {

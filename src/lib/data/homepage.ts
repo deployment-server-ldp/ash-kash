@@ -5,7 +5,11 @@ import { getProductsByIds, listProducts, toCardVM } from "./products";
 import type { ProductCardVM } from "@/types/product";
 
 export const getHomepageSections = cache(async () => {
-  return prisma.homepageSection.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
+  return prisma.homepageSection.findMany({ where: { isActive: true, pageId: null }, orderBy: { sortOrder: "asc" } });
+});
+
+export const getPageSections = cache(async (pageId: string) => {
+  return prisma.homepageSection.findMany({ where: { isActive: true, pageId }, orderBy: { sortOrder: "asc" } });
 });
 
 export const getActiveSlider = cache(async (location: string = "home_hero") => {

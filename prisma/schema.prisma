@@ -800,11 +800,17 @@ model OrderStatusHistory {
 
 model HomepageSection {
   id         String                @id @default(cuid())
+  // null = belongs to the homepage; set = belongs to that custom Page's own section builder.
+  pageId     String?
+  page       Page?                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
   type       HomepageSectionType
   title      String?
   subtitle   String?
   content    String?               @db.Text
-  imageUrl   String?
+  imageUrl   String?               @db.LongText
+  // Second image — set to lay the banner out as a 2-column grid of two square images
+  // instead of one full-width image.
+  imageUrl2  String?               @db.LongText
   buttonText String?
   buttonUrl  String?
   settings   Json? // { source, limit, productIds } for FEATURED_PRODUCTS etc.
@@ -814,6 +820,7 @@ model HomepageSection {
   updatedAt  DateTime              @updatedAt
 
   @@index([isActive, sortOrder])
+  @@index([pageId, isActive, sortOrder])
 }
 
 model Slider {
@@ -883,15 +890,16 @@ model MenuItem {
 }
 
 model Page {
-  id             String    @id @default(cuid())
+  id             String            @id @default(cuid())
   title          String
-  slug           String    @unique
-  content        String?   @db.LongText
+  slug           String            @unique
+  content        String?           @db.LongText
+  sections       HomepageSection[]
   seoTitle       String?
-  seoDescription String?   @db.VarChar(500)
+  seoDescription String?           @db.VarChar(500)
   seoKeywords    String?
-  isPublished    Boolean   @default(true)
-  createdAt      DateTime  @default(now())
+  isPublished    Boolean           @default(true)
+  createdAt      DateTime          @default(now())
   updatedAt      DateTime  @updatedAt
 }
 

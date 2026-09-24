@@ -17,7 +17,7 @@ const TYPES: { value: string; label: string }[] = [
   { value: "NEWSLETTER", label: "Newsletter" },
 ];
 
-export function AddHomepageSectionForm() {
+export function AddHomepageSectionForm({ pageId = null }: { pageId?: string | null } = {}) {
   const [open, setOpen] = useState(false);
 
   if (!open) {
@@ -31,7 +31,7 @@ export function AddHomepageSectionForm() {
   return (
     <form
       action={async (fd) => {
-        await createHomepageSection(fd);
+        await createHomepageSection(pageId, fd);
         setOpen(false);
       }}
       className="flex gap-2"

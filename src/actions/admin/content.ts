@@ -26,6 +26,7 @@ const sectionSchema = z.object({
   subtitle: z.string().optional(),
   content: z.string().optional(),
   imageUrl: z.string().optional(),
+  imageUrl2: z.string().optional(),
   buttonText: z.string().optional(),
   buttonUrl: z.string().optional(),
   source: z.string().optional(),
@@ -34,7 +35,11 @@ const sectionSchema = z.object({
   isActive: z.coerce.boolean().optional(),
 });
 
-export async function createHomepageSection(formData: FormData) {
+function pathsFor(pageId: string | null) {
+  return pageId ? [`/admin/pages/${pageId}`] : ["/admin/content"];
+}
+
+export async function createHomepageSection(pageId: string | null, formData: FormData) {
   await requireAdminAction("content", "create");
   const productIds = formData.getAll("productIds").map(String);
   const parsed = sectionSchema.parse({ ...Object.fromEntries(formData.entries()), productIds });
@@ -44,14 +49,16 @@ export async function createHomepageSection(formData: FormData) {
       ? { source: parsed.source || "latest", limit: parsed.limit ? Number(parsed.limit) : 8, productIds: parsed.productIds }
       : Prisma.JsonNull;
 
-  const max = await prisma.homepageSection.aggregate({ _max: { sortOrder: true } });
+  const max = await prisma.homepageSection.aggregate({ where: { pageId }, _max: { sortOrder: true } });
   await prisma.homepageSection.create({
     data: {
+      pageId,
       type: parsed.type,
       title: parsed.title || null,
       subtitle: parsed.subtitle || null,
       content: parsed.content || null,
       imageUrl: parsed.imageUrl || null,
+      imageUrl2: parsed.imageUrl2 || null,
       buttonText: parsed.buttonText || null,
       buttonUrl: parsed.buttonUrl || null,
       settings,
@@ -59,7 +66,7 @@ export async function createHomepageSection(formData: FormData) {
       isActive: parsed.isActive ?? true,
     },
   });
-  revalidatePath("/admin/content");
+  for (const path of pathsFor(pageId)) revalidatePath(path);
   revalidatePath("/", "layout");
 }
 
@@ -73,40 +80,45 @@ export async function updateHomepageSection(id: string, formData: FormData) {
       ? { source: parsed.source || "latest", limit: parsed.limit ? Number(parsed.limit) : 8, productIds: parsed.productIds }
       : Prisma.JsonNull;
 
-  await prisma.homepageSection.update({
+  const updated = await prisma.homepageSection.update({
     where: { id },
     data: {
       title: parsed.title || null,
       subtitle: parsed.subtitle || null,
       content: parsed.content || null,
       imageUrl: parsed.imageUrl || null,
+      imageUrl2: parsed.imageUrl2 || null,
       buttonText: parsed.buttonText || null,
       buttonUrl: parsed.buttonUrl || null,
       settings,
       isActive: parsed.isActive ?? false,
     },
   });
-  revalidatePath("/admin/content");
+  for (const path of pathsFor(updated.pageId)) revalidatePath(path);
   revalidatePath("/", "layout");
 }
 
 export async function toggleHomepageSection(id: string, isActive: boolean) {
   await requireAdminAction("content", "edit");
-  await prisma.homepageSection.update({ where: { id }, data: { isActive } });
-  revalidatePath("/admin/content");
+  const updated = await prisma.homepageSection.update({ where: { id }, data: { isActive } });
+  for (const path of pathsFor(updated.pageId)) revalidatePath(path);
   revalidatePath("/", "layout");
 }
 
 export async function deleteHomepageSection(id: string) {
   await requireAdminAction("content", "delete");
-  await prisma.homepageSection.delete({ where: { id } });
-  revalidatePath("/admin/content");
+  const deleted = await prisma.homepageSection.delete({ where: { id } });
+  for (const path of pathsFor(deleted.pageId)) revalidatePath(path);
   revalidatePath("/", "layout");
 }
 
 export async function moveHomepageSection(id: string, direction: "up" | "down") {
   await requireAdminAction("content", "edit");
-  const sections = await prisma.homepageSection.findMany({ orderBy: { sortOrder: "asc" } });
+  const current = await prisma.homepageSection.findUniqueOrThrow({ where: { id } });
+  const sections = await prisma.homepageSection.findMany({
+    where: { pageId: current.pageId },
+    orderBy: { sortOrder: "asc" },
+  });
   const index = sections.findIndex((s) => s.id === id);
   const swapWith = direction === "up" ? index - 1 : index + 1;
   if (index < 0 || swapWith < 0 || swapWith >= sections.length) return;
@@ -116,6 +128,5 @@ export async function moveHomepageSection(id: string, direction: "up" | "down") 
     prisma.homepageSection.update({ where: { id: a.id }, data: { sortOrder: b.sortOrder } }),
     prisma.homepageSection.update({ where: { id: b.id }, data: { sortOrder: a.sortOrder } }),
   ]);
-  revalidatePath("/admin/content");
-  revalidatePath("/", "layout");
+  for (const path of pathsFor(current.pageId)) revalidatePath(path);
 }
