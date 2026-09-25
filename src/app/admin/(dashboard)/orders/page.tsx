@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
+import { can } from "@/lib/auth/rbac";
 import { getCurrencyByCodeMap } from "@/lib/currency/service";
 import { formatOrderAmount } from "@/lib/currency/format";
 import { StatusBadge } from "@/components/account/StatusBadge";
+import { DeleteButton } from "@/components/admin/DeleteButton";
+import { deleteOrder } from "@/actions/admin/orders";
 import type { OrderStatus } from "@prisma/client";
 
 export const metadata: Metadata = { title: "Orders" };
@@ -13,7 +16,8 @@ const PAGE_SIZE = 20;
 type SP = { q?: string; status?: string; page?: string };
 
 export default async function AdminOrdersPage({ searchParams }: { searchParams: Promise<SP> }) {
-  await requireAdmin("orders");
+  const session = await requireAdmin("orders");
+  const canDelete = can(session.role, "orders", "delete");
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page ?? 1));
   // Each order was placed in — and its total stored in — its own currency, captured at
@@ -75,6 +79,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
               <th className="p-3">Total</th>
               <th className="p-3">Status</th>
               <th className="p-3">Date</th>
+              {canDelete ? <th className="p-3" /> : null}
             </tr>
           </thead>
           <tbody>
@@ -96,11 +101,19 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                   <StatusBadge status={o.status} />
                 </td>
                 <td className="p-3 text-noir/50">{o.createdAt.toLocaleDateString()}</td>
+                {canDelete ? (
+                  <td className="p-3">
+                    <DeleteButton
+                      action={deleteOrder.bind(null, o.id)}
+                      confirmText={`Delete order ${o.orderNumber} permanently? This cannot be undone.`}
+                    />
+                  </td>
+                ) : null}
               </tr>
             ))}
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-noir/50">
+                <td colSpan={canDelete ? 7 : 6} className="p-6 text-center text-noir/50">
                   No orders found.
                 </td>
               </tr>

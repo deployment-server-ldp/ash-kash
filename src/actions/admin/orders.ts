@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdminAction } from "@/lib/auth/require-admin-action";
 
@@ -60,4 +61,12 @@ export async function updateOrderStatus(formData: FormData) {
 
   revalidatePath(`/admin/orders/${parsed.orderId}`);
   revalidatePath("/admin/orders");
+}
+
+export async function deleteOrder(id: string) {
+  await requireAdminAction("orders", "delete");
+  await prisma.order.delete({ where: { id } });
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+  redirect("/admin/orders");
 }

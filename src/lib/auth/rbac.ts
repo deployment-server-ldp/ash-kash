@@ -55,7 +55,7 @@ const ROLE_PERMISSIONS: Record<Exclude<UserRole, "CUSTOMER">, Partial<Record<Res
     analytics: ["view"],
   },
   ORDER_MANAGER: {
-    orders: ["view", "edit"],
+    orders: ["view", "edit", "delete"],
     customers: ["view", "edit"],
     shipping: ["view"],
     coupons: ["view"],

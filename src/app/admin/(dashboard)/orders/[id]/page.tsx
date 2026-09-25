@@ -3,13 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
+import { can } from "@/lib/auth/rbac";
 import { formatWithCurrency } from "@/lib/currency/format";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
+import { DeleteButton } from "@/components/admin/DeleteButton";
+import { deleteOrder } from "@/actions/admin/orders";
 
 export const metadata: Metadata = { title: "Order Details" };
 
 export default async function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin("orders");
+  const session = await requireAdmin("orders");
   const { id } = await params;
 
   const order = await prisma.order.findUnique({
@@ -45,6 +48,12 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           <Link href={`/admin/orders/${order.id}/packing-slip`} target="_blank" className="btn-outline">
             Packing Slip
           </Link>
+          {can(session.role, "orders", "delete") ? (
+            <DeleteButton
+              action={deleteOrder.bind(null, order.id)}
+              confirmText="Delete this order permanently? This cannot be undone."
+            />
+          ) : null}
         </div>
       </div>
 
