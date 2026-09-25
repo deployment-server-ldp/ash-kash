@@ -146,11 +146,13 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
           <ProductGridSection
             section={{
               id: "related",
+              pageId: null,
               type: "FEATURED_PRODUCTS",
               title: "You May Also Like",
               subtitle: null,
               content: null,
               imageUrl: null,
+              imageUrl2: null,
               buttonText: null,
               buttonUrl: null,
               settings: null,
