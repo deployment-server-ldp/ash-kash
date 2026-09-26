@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/guards";
 import { DeleteButton } from "@/components/admin/DeleteButton";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import {
   createBrand,
   createColor,
@@ -135,11 +136,13 @@ export default async function ProductAttributesPage() {
               <option value="in">Inches</option>
               <option value="cm">Centimeters</option>
             </select>
-            <input name="sizeNames" placeholder="Sizes, comma separated: XS, S, M, L, XL" required className="input sm:col-span-2" />
+            <div className="sm:col-span-2">
+              <ImageUploadField name="imageUrl" label="Size Chart Image (optional — for an image-only guide, leave the fields below blank)" />
+            </div>
+            <input name="sizeNames" placeholder="Sizes, comma separated: XS, S, M, L, XL (optional if using an image)" className="input sm:col-span-2" />
             <input
               name="measurementKeys"
-              placeholder="Measurements, comma separated: Bust, Waist, Hip"
-              required
+              placeholder="Measurements, comma separated: Bust, Waist, Hip (optional if using an image)"
               className="input sm:col-span-2"
             />
             <textarea name="instructions" placeholder="Instructions (optional)" className="input sm:col-span-2" />
@@ -148,7 +151,7 @@ export default async function ProductAttributesPage() {
             </button>
           </form>
           <p className="mt-2 text-xs text-noir/50">
-            After creating, edit the guide&apos;s rows to fill in the actual measurement values for each size.
+            If you filled in sizes/measurements, edit the guide afterwards to enter each size&apos;s actual values.
           </p>
         </div>
       </div>

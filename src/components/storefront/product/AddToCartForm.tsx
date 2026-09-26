@@ -125,6 +125,11 @@ export function AddToCartForm({ product }: { product: ProductDetailVM }) {
               );
             })}
           </div>
+          {product.sizeGuide ? (
+            <div className="mt-2">
+              <SizeGuideModal sizeGuide={product.sizeGuide} />
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -132,7 +137,7 @@ export function AddToCartForm({ product }: { product: ProductDetailVM }) {
         <div>
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs uppercase tracking-wide2 text-noir/60">Size</p>
-            {product.sizeGuide ? <SizeGuideModal sizeGuide={product.sizeGuide} /> : null}
+            {product.sizeGuide && colors.length === 0 ? <SizeGuideModal sizeGuide={product.sizeGuide} /> : null}
           </div>
           <div className="flex flex-wrap gap-2">
             {sizes.map(([id, name]) => {
