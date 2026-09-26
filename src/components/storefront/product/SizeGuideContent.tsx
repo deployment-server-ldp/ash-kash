@@ -10,8 +10,19 @@ export function SizeGuideContent({ sizeGuide }: { sizeGuide: NonNullable<Product
     <div>
       {sizeGuide.instructions ? <p className="mb-4 text-sm text-noir/60">{sizeGuide.instructions}</p> : null}
       {sizeGuide.imageUrl ? (
-        <div className="relative mb-4 w-full max-w-md">
-          <Image src={sizeGuide.imageUrl} alt={sizeGuide.title} width={800} height={800} unoptimized className="h-auto w-full object-contain" />
+        <div className="relative mb-4 w-full">
+          {/* width/height of 0 + sizes tells next/image to size itself from the real image's
+              own aspect ratio via CSS, instead of forcing it into a fixed (and here,
+              wrongly square) box that made non-square charts render shrunk down. */}
+          <Image
+            src={sizeGuide.imageUrl}
+            alt={sizeGuide.title}
+            width={0}
+            height={0}
+            sizes="100vw"
+            unoptimized
+            style={{ width: "100%", height: "auto" }}
+          />
         </div>
       ) : null}
       {showTable ? (
