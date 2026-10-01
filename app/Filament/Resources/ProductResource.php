@@ -136,11 +136,16 @@ class ProductResource extends Resource
                                     SpatieMediaLibraryFileUpload::make('images')
                                         ->collection('images')
                                         ->multiple()
+                                        // Show images in their saved order (top = first) and add new
+                                        // uploads at the bottom. Without this Filament displays the list
+                                        // reversed, so the primary image appears last and drag-reordering
+                                        // saves the opposite of what the admin sees.
+                                        ->appendFiles()
                                         ->reorderable()
                                         ->image()
                                         ->imageEditor()
-                                        ->panelLayout('grid')
-                                        ->helperText('First image is the primary card image; second becomes the hover image.')
+                                        ->imagePreviewHeight('220')
+                                        ->helperText('Drag images up/down to reorder. The TOP image is the primary image; the second becomes the hover image. Click Save to apply the new order.')
                                         ->columnSpanFull(),
                                 ]),
 
