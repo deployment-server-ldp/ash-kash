@@ -21,7 +21,13 @@ export function Testimonials({ section, testimonials }: { section: HomepageSecti
                 ))}
               </div>
               <p className="text-sm text-noir/70">&ldquo;{t.content}&rdquo;</p>
-              <p className="mt-4 font-display">{t.name}</p>
+              <div className="mt-4 flex items-center justify-center gap-3">
+                {t.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={t.imageUrl} alt={t.name} className="h-10 w-10 rounded-full object-cover" loading="lazy" />
+                ) : null}
+                <p className="font-display">{t.name}</p>
+              </div>
             </div>
           ))}
         </div>

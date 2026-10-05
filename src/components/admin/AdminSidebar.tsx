@@ -36,6 +36,7 @@ const NAV: NavGroup[] = [
     items: [
       { href: "/admin/content", label: "Homepage", resource: "content" },
       { href: "/admin/sliders", label: "Sliders", resource: "content" },
+      { href: "/admin/testimonials", label: "Testimonials", resource: "content" },
       { href: "/admin/pages", label: "Pages", resource: "content" },
       { href: "/admin/blog", label: "Blog", resource: "blog" },
     ],

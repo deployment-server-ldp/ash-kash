@@ -79,7 +79,7 @@ export const getShowcaseCollections = cache(async (limit = 2) => {
 });
 
 export const getActiveTestimonials = cache(async () => {
-  return prisma.testimonial.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
+  return prisma.testimonial.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] });
 });
 
 export { listProducts };
